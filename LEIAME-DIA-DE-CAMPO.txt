@@ -1,0 +1,36 @@
+RizoWiki 1.0 — versão para o Dia de Campo (tela interativa)
+=============================================================
+
+COMO ABRIR (pendrive, sem internet)
+1. Copie a pasta inteira para o pendrive.
+2. Na tela, abra o arquivo index.html no Chrome ou Edge.
+3. Toque no botão da TV (ícone de televisão, no canto superior direito) para entrar no MODO TELA.
+   - Ou abra direto pelo endereço: index.html?modo=tela
+   - O modo fica guardado no navegador até ser desligado no mesmo botão.
+4. Toque no botão de tela cheia (ícone de setas, ao lado da TV). Para sair: tecla Esc ou o mesmo botão.
+
+O QUE O MODO TELA FAZ
+- Letra maior (base 18 px) e botões maiores para toque.
+- Esconde a aba Lab.
+- Depois de 3 minutos sem toque, volta sozinho para a página inicial.
+
+IMAGENS NOVAS (quando ficarem prontas)
+- Coloque os arquivos em assets/v2/ com os nomes <grupo>_colonia, <grupo>_efeito1, <grupo>_efeito2
+  (grupos: bacillus, fixadores, rhizobium, methylobacterium, bioinseticidas, pseudomonas, trichoderma, micorrizas, pnsb).
+- Em assets/data/bioData.js, no campo "imagensV2" do grupo, troque null pelo caminho
+  (ex.: "colonia": "assets/v2/rhizobium_colonia.webp"). Enquanto estiver null, a imagem atual continua.
+
+ESTUDOS DE CASO OCULTOS (verificado: false em bioData.js)
+- rhizobium: números 3.800 x 3.950 kg/ha e referência "Hungria et al., 2013. Soil Biology" não conferidos.
+- bioinseticidas: "Embrapa Milho e Sorgo, Circ. Téc. 2022" e números 100/25/15 não conferidos.
+- pseudomonas: Mendes et al. 2011 (Science) existe, mas os valores 80 x 20 do gráfico não têm unidade nem origem.
+- trichoderma: Tucci et al. 2011 é Molecular Plant Pathology 12:341–354, com tomate (não alface / Crop Protection).
+- micorrizas: "4x mais 32P" atribuído a Smith & Read (2008), livro, sem página/ensaio específico.
+- pnsb: Watanabe et al. 2017 (Plant and Soil) não encontrado.
+Para mostrar um deles, confira a fonte, corrija os dados e mude "verificado" para true.
+
+PENDÊNCIAS QUE NÃO FORAM ALTERADAS (para revisão)
+- assets/data/solverData.js, objetivo "Recuperação de Solo Compactado": "Dose: Dobrar a dose de Priestia em áreas críticas." (dose sem fonte).
+- Methylobacterium, "Onde faz sentido": "Quando se busca o efeito 'Stay-green'" — efeito não confirmado nos ensaios citados.
+- Aba Fatores, card "Efeito Terroir": +24% e +11% (coinoculação B119 + B2084) marcados com data-verificar="true".
+- Selo de evidência: bioinseticidas, pseudomonas, trichoderma e micorrizas estão como "em_revisao" (sem selo).
