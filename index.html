@@ -3530,13 +3530,19 @@
                         const f2 = document.createElement("iframe");
                         f2.src = "analytics.html";
                         f2.style.width = "100%";
-                        f2.style.height = "1100px";
+                        f2.style.height = "1400px";
                         f2.style.border = "none";
                         f2.style.background = "transparent";
 
                         f2.onload = () => {
                             if (isLight) f2.contentWindow.postMessage('force-light', '*');
                         };
+                        // A aba Fatores (analytics.html) informa a própria altura: matriz, páginas por fator e Sankey
+                        window.addEventListener('message', (ev) => {
+                            if (ev.source === f2.contentWindow && ev.data && ev.data.rizoAltura) {
+                                f2.style.height = (ev.data.rizoAltura + 8) + 'px';
+                            }
+                        });
 
                         a.appendChild(f2);
                     }
