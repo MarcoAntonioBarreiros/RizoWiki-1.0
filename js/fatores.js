@@ -1,5 +1,5 @@
 'use strict';
-// RizoWiki · Fatores — matriz de evidências, páginas por fator e Sankey (base: módulo GPT/Gemini; visual e gráficos refeitos)
+// RizoWiki · Fatores — atlas de evidências (matriz + pop-up com anel), páginas por fator e fichas de estudo (base: módulo GPT/Gemini; visual e gráficos refeitos)
 const F = window.FAT;
 const app = document.getElementById('app');
 const popRaiz = document.getElementById('pop-raiz');
@@ -15,196 +15,311 @@ const fatorPorId = id => F.fatores.find(f => f.id === id);
 const ehFora = e => !/brasil/i.test(e.location || '');
 let fatorAtual = null;
 
-// ---------- intensidade de uma célula ----------
-function resumoCelula(a, fid) {
-  if (fid === 'formulacao') {
-    const p = a.filter(e => e.prot && e.prot.sem !== undefined);
-    if (p.length) { const m = p.reduce((x, y) => (y.prot.com - y.prot.sem > x.prot.com - x.prot.sem ? y : x));
-      return { tipo: 'ganha', mag: Math.min(100, m.prot.com - m.prot.sem), txt: num(m.prot.sem, 1) + '→' + num(m.prot.com, 0) + '%' }; }
-    return { tipo: 'qual', mag: 0, txt: (a[0].prot && a[0].prot.qual) || 'qualitativo' };
-  }
-  const comNum = a.filter(e => e.sobra !== undefined);
-  const perdas = comNum.filter(e => e.sobra < 100);
-  if (perdas.length) { const pior = Math.min(...perdas.map(e => e.sobra)); return { tipo: 'perde', mag: 100 - pior, txt: '−' + num(100 - pior, 0) + '%' }; }
-  if (comNum.length) { const m = Math.max(...comNum.map(e => e.sobra)); return { tipo: 'ganha', mag: Math.min(m - 100, 100), txt: '+' + num(m - 100, 0) + '%' }; }
-  return { tipo: 'qual', mag: 0, txt: a[0].qual || 'qualitativo' };
+// ---------- evidência de cada célula ----------
+const FAT_COR = { temperatura: '#fb923c', radiacao: '#facc15', agua: '#38bdf8', compatibilidade: '#a78bfa', tempo: '#2dd4bf',
+  nutricao: '#4ade80', formulacao: '#f472b6', salinidade: '#94a3b8', ph: '#f87171' };
+const FAT_CURTO = { agua: 'Água', formulacao: 'Formulação', radiacao: 'Radiação solar' };
+const MED_COR = { sobrevivencia: '#f472b6', germinacao: '#4ade80', crescimento: '#38bdf8', colonizacao: '#fb923c',
+  metabolica: '#22d3ee', biocontrole: '#a78bfa', beneficio: '#eab308' };
+const orbe = (cor, icone, rotulo, extra, titulo, curta) => `<button class="orbe" style="--o:${cor}" ${extra} title="${esc(titulo || rotulo)}" aria-label="${esc(titulo || rotulo)}"><span class="orbe-c"><i class="fas ${icone}"></i></span><b class="r-cheio">${esc(rotulo)}</b>${curta ? `<b class="r-curto">${esc(curta)}</b>` : ''}</button>`;
+const FAT_MINI = { temperatura: 'Temp.', radiacao: 'Radiação', agua: 'Água', compatibilidade: 'Compat.', tempo: 'Espera', nutricao: 'Nutrição', formulacao: 'Formul.', salinidade: 'Sal', ph: 'pH' };
+const curtoF = f => FAT_CURTO[f.id] || f.nome;
+const MEDIDAS = { sobrevivencia: 'Sobrevivência e cultivabilidade', germinacao: 'Germinação', crescimento: 'Crescimento e esporulação',
+  colonizacao: 'Colonização e nodulação', metabolica: 'Atividade metabólica', biocontrole: 'Atividade de biocontrole', beneficio: 'Benefício agronômico' };
+const CAT = {
+  reducao: { nome: 'Redução observada', cor: '#f87171' },
+  nula: { nome: 'Sem diferença detectada', cor: '#94a3b8' },
+  aumento: { nome: 'Aumento observado', cor: '#4ade80' },
+  semquant: { nome: 'Sem quantificação', cor: '#c4b5fd' }
+};
+// Uma resposta = um estudo (contraste principal) da célula. Não há limite universal para "acentuada" x "moderada": usa-se "Redução observada".
+function categoria(e, fid) {
+  if (e.resp) return e.resp;
+  if (fid === 'formulacao' && e.prot) return e.prot.sem === undefined ? 'semquant' : e.prot.com > e.prot.sem ? 'aumento' : e.prot.com < e.prot.sem ? 'reducao' : 'nula';
+  if (e.sobra !== undefined) return e.sobra < 100 ? 'reducao' : e.sobra > 100 ? 'aumento' : 'nula';
+  return 'semquant';
 }
-function esfera(c, mag, tipo, id) {
-  // disco de vidro fosco (mesmo estilo dos pontos do solo): fundo translúcido, anel na cor do organismo, brilho suave
-  const r = tipo === 'qual' ? 9 : 7 + 18 * Math.sqrt(mag / 100);
-  if (tipo === 'qual') return `<svg width="56" height="56" viewBox="-28 -28 56 56"><circle r="${r}" fill="${hexA(c, .1)}" stroke="${c}" stroke-width="2" stroke-dasharray="3 3"/></svg>`;
-  const seta = tipo === 'ganha' ? `<path d="M0 -6 L6 2 L-6 2 Z" fill="${c}"/>` : '';
-  return `<svg width="56" height="56" viewBox="-28 -28 56 56"><circle r="${r + 3}" fill="${c}" opacity=".13"/>
-    <circle r="${r}" fill="${hexA(c, .3)}" stroke="${c}" stroke-width="2.2"/><circle r="${Math.max(r - 3.5, 2)}" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="1"/>${seta}</svg>`;
+function resumoCelula(g, fid) {
+  const a = expsDaCelula(g, fid);
+  const ver = new Set(a.filter(e => !e.pendente).map(e => e.pub));
+  const pen = new Set(a.filter(e => e.pendente && !ver.has(e.pub)).map(e => e.pub));
+  return { a, nVer: ver.size, nPen: pen.size };
+}
+// esfera de vidro fosco: tamanho = publicações verificadas (1 · 2–3 · 4+); fantasma = só estudos ainda não validados
+function esfera(c, n, fantasma) {
+  if (fantasma) return `<svg viewBox="-32 -32 64 64" class="esf"><circle r="15" fill="${hexA(c, .08)}" stroke="${hexA(c, .8)}" stroke-width="2" stroke-dasharray="3.5 3.5"/></svg>`;
+  const r = n >= 4 ? 25 : n >= 2 ? 18 : 11.5;
+  return `<svg viewBox="-32 -32 64 64" class="esf"><circle r="${r + 4}" fill="${c}" opacity=".13"/><circle r="${r}" fill="${hexA(c, .3)}" stroke="${c}" stroke-width="2.2"/>
+    <circle r="${Math.max(r - 4, 2)}" fill="none" stroke="#fff" stroke-opacity=".14" stroke-width="1"/></svg>`;
+}
+const corta = (t, n) => (t = String(t || '')).length > n ? t.slice(0, n - 1) + '…' : t;
+function refCurta(e) {
+  const s = String(e.source || ''), m = s.match(/^\s*([A-ZÀ-Ý][\wÀ-ÿ'\-]+)(.{0,60}?)((?:19|20)\d\d)/);
+  return m ? `${m[1]}${/et al|,|&/.test(m[2]) ? ' et al.' : ''} ${m[3]}` : corta(s, 46);
 }
 
 // ---------- VISÃO GERAL: matriz ----------
 function visaoGeral() {
   fatorAtual = null; fecharPop();
-  const nPub = F.exps.length, nConf = F.exps.filter(e => e.conferido).length, nAcv = Object.values(F.acervo).reduce((a, b) => a + b, 0);
-  let cel = 0;
+  const nVer = new Set(F.exps.filter(e => !e.pendente).map(e => e.pub)).size;
+  const verG = new Set(F.exps.filter(e => !e.pendente).map(e => e.pub)), nPen = new Set(F.exps.filter(e => e.pendente && !verG.has(e.pub)).map(e => e.pub)).size;
   const linhas = F.grupos.map(g => {
     const tiles = F.fatores.map(f => {
-      const a = f.soAcervo ? [] : expsDaCelula(g.nome, f.id);
-      const nA = F.acervo[g.nome + '|' + f.id] || 0;
-      if (a.length) {
-        const r = resumoCelula(a, f.id); cel++;
-        const resp = [...new Set(a.map(e => e.curto))].join(' · ');
-        return `<button class="tile" data-g="${esc(g.nome)}" data-f="${f.id}" style="--c:${g.cor};--bgc:${hexA(g.cor, .16)};--bdc:${hexA(g.cor, .28)}"
-          aria-label="${esc(g.nome)} e ${esc(f.nome)}">${esfera(g.cor, r.mag, r.tipo, cel)}
-          <b class="t-num ${r.tipo === 'qual' ? 'q' : ''} ${r.txt.includes('→') ? 'p' : ''}">${esc(r.txt)}</b><span class="t-resp">${esc(resp)}</span>
-          <span class="t-pe">${a.map(() => '<span></span>').join('')}</span>${nA ? `<span class="t-acv" title="no acervo, a conferir">+${nA}</span>` : ''}</button>`;
-      }
-      if (nA) return `<button class="tile acervo" data-g="${esc(g.nome)}" data-f="${f.id}" data-acv="1"><b>no acervo</b><small>${nA} ${nA > 1 ? 'resultados' : 'resultado'} a conferir</small></button>`;
-      return `<div class="vazio" title="sem estudo encontrado">—</div>`;
+      const r = resumoCelula(g.nome, f.id);
+      if (!r.a.length) return `<div class="vazio" aria-hidden="true"></div>`;
+      const fant = !r.nVer;
+      return `<button class="tile ${fant ? 'fantasma' : ''}" data-g="${esc(g.nome)}" data-f="${f.id}" style="--c:${g.cor}"
+        aria-label="${esc(g.nome)} e ${esc(f.nome)}">${esfera(g.cor, r.nVer, fant)}</button>`;
     }).join('');
-    return `<div class="m-org" style="--c:${g.cor}"><i></i><span>${esc(g.nome)}${g.nome === 'Bioinseticidas' ? '<small>Beauveria, Metarhizium, Bt, Chromobacterium</small>' : g.nome === 'PNSB' ? '<small>bactérias púrpuras</small>' : ''}</span></div>${tiles}`;
+    return `<div class="m-org" style="--c:${g.cor}"><i></i><span>${esc(g.nome).replace('Methylobacterium', 'Methylo&shy;bacterium').replace('Azospirillum', 'Azospi&shy;rillum').replace('Bioinseticidas', 'Bioinseti&shy;cidas').replace('Pseudomonas', 'Pseudo&shy;monas').replace('Trichoderma', 'Tricho&shy;derma')}${g.nome === 'Bioinseticidas' ? '<small>Beauveria, Metarhizium, Bt, Chromobacterium</small>' : g.nome === 'PNSB' ? '<small>bactérias púrpuras</small>' : ''}</span></div>${tiles}`;
   }).join('');
   app.innerHTML = `
   <div class="panel">
     <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:start">
-      <div><p class="eyebrow">Mapa de evidências</p><h1>O que ajuda ou atrapalha cada biológico</h1>
-        <p class="lead">Cada esfera mostra a <b>maior perda medida</b> quando o fator aparece, comparada com o mesmo biológico sem o fator. Toque numa célula para ver os estudos; toque no nome do fator (no alto da coluna) para ver todos os gráficos.</p></div>
-      <span class="selo"><i class="fas fa-circle-check"></i> ${nConf} de ${nPub} estudos conferidos na fonte</span>
+      <div><p class="eyebrow">Atlas de evidências</p><h1>O que já se estudou sobre cada biológico</h1>
+        <p class="lead">Cada esfera reúne os estudos de um biológico diante de um fator. Toque numa esfera para ver o que eles encontraram; toque no nome do fator para ver todos os gráficos.</p></div>
+      <span class="selo"><i class="fas fa-book-open"></i> ${nVer} publicações verificadas · ${nPen} a validar</span>
     </div>
     <div class="matriz-rolagem"><div class="matriz">
-      <div></div>${F.fatores.map(f => `<button class="m-cab ${f.soAcervo ? 'soacervo' : ''}" data-fator="${f.soAcervo ? '' : f.id}"><i class="fas ${f.icone}"></i>${esc(f.nome)}</button>`).join('')}
+      <div></div>${F.fatores.map(f => `<div class="m-cab">${orbe(FAT_COR[f.id], f.icone, curtoF(f), `data-fator="${f.id}"`, f.nome, FAT_MINI[f.id])}</div>`).join('')}
       ${linhas}
     </div></div>
+    <div class="leg-fatores">${F.fatores.map(f => `<button data-fator="${f.id}" style="--o:${FAT_COR[f.id]}"><i class="fas ${f.icone}"></i>${esc(curtoF(f))}</button>`).join('')}</div>
     <div class="legenda">
-      <span>${esfera('#94a3b8', 15, 'perde', 'l1')}${esfera('#94a3b8', 90, 'perde', 'l2')} perdeu pouco · perdeu muito</span>
-      <span>${esfera('#94a3b8', 40, 'ganha', 'l3')} o fator ajudou</span>
-      <span>${esfera('#94a3b8', 0, 'qual', 'l4')} sem número (teste de sim ou não)</span>
-      <span><b style="color:var(--text)">—</b> nenhum estudo encontrado</span>
+      <span class="leg-tam">${esfera('#94a3b8', 1)}${esfera('#94a3b8', 2)}${esfera('#94a3b8', 4)} 1 · 2 a 3 · 4 ou mais publicações verificadas</span>
+      <span>${esfera('#94a3b8', 0, true)} estudos localizados, ainda não validados</span>
+      <span><i class="leg-vazio"></i> nenhum estudo localizado</span>
     </div>
-    <p class="lead" style="font-size:12.5px;margin-top:10px">${nPub} medidas em ${cel} combinações; ${nConf} delas já reconferidas no artigo original. A cor é o organismo. Laboratório, estufa e campo têm contextos diferentes: veja o tipo de ensaio em cada estudo.</p>
-  </div>
-  <div class="panel sankey-panel">
-    <p class="eyebrow">Fluxo de solução</p><h2>Do problema no campo ao mecanismo do biológico</h2>
-    <p class="lead" style="font-size:13.5px">Toque num problema, num biológico ou num mecanismo para acender os caminhos ligados a ele.</p>
-    <div class="sk-info" id="sk-info"><i class="fas fa-hand-pointer"></i><div><b>Toque no diagrama</b><span>Cada linha liga um problema a um biológico e ao mecanismo que ele usa.</span></div></div>
-    <div id="sankey"></div>
-    <p class="lead" style="font-size:12px;margin-top:6px">Mecanismos gerais descritos na literatura. Não são medidas: os números estão na matriz acima.</p>
+    <p class="nota-leg"><i class="fas fa-circle-info"></i> O tamanho mostra quanta literatura verificada o RizoWiki reúne sobre a combinação. Não mostra resistência, eficiência nem qualidade do organismo.</p>
   </div>`;
-  requestAnimationFrame(() => desenharSankey());
-  ligarNav();
-  app.querySelectorAll('.m-cab[data-fator]').forEach(b => b.dataset.fator && b.addEventListener('click', () => abrirFator(b.dataset.fator)));
+  app.querySelectorAll('.m-cab [data-fator], .leg-fatores [data-fator]').forEach(b => b.addEventListener('click', () => abrirFator(b.dataset.fator)));
   app.querySelectorAll('.tile').forEach(t => {
     t.addEventListener('click', ev => { ev.stopPropagation(); mostrarPop(t); });
     t.addEventListener('pointerenter', ev => { if (ev.pointerType === 'mouse') mostrarPop(t); });
   });
 }
 function navFatores() {
-  return `<nav class="nav"><button data-nav="" class="${fatorAtual ? '' : 'on'}"><i class="fas fa-table-cells"></i>Visão geral</button>${F.fatores.filter(f => !f.soAcervo).map(f =>
-    `<button data-nav="${f.id}" class="${fatorAtual === f.id ? 'on' : ''}"><i class="fas ${f.icone}"></i>${esc(f.nome)}</button>`).join('')}</nav>`;
+  return `<nav class="nav orbes ${fatorAtual ? 'tem-on' : ''}">${orbe('#0ea5e9', 'fa-table-cells', 'Visão geral', 'data-nav=""')}<span class="nav-sep"></span>${F.fatores.map(f =>
+    orbe(FAT_COR[f.id], f.icone, curtoF(f), `data-nav="${f.id}"`, f.nome).replace('class="orbe"', `class="orbe ${fatorAtual === f.id ? 'on' : ''}"`)).join('')}</nav>`;
 }
 function ligarNav() { app.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click', () => b.dataset.nav ? abrirFator(b.dataset.nav) : visaoGeral())); }
 
-// ---------- POPOVER junto da célula ----------
+// ---------- POP-UP da esfera: anel com a composição dos resultados ----------
 function fecharPop() { popRaiz.innerHTML = ''; app.querySelectorAll('.tile.sel').forEach(t => t.classList.remove('sel')); }
-function mostrarPop(t) {
-  const g = t.dataset.g, f = fatorPorId(t.dataset.f), c = t.dataset.acv ? '#64748b' : corGrupo[g];
-  if (t.classList.contains('sel')) return;
+function anel(cont, total) {
+  const R = 64, r = 43, cx = 80, cy = 80; let ang = -Math.PI / 2, s = '';
+  const pt = (rr, a) => [cx + rr * Math.cos(a), cy + rr * Math.sin(a)];
+  Object.keys(CAT).forEach(k => {
+    const n = cont[k] || 0; if (!n) return;
+    if (n === total) { s += `<circle class="fatia" data-cat="${k}" cx="${cx}" cy="${cy}" r="${(R + r) / 2}" fill="none" stroke="${CAT[k].cor}" stroke-width="${R - r}"/>`; return; }
+    const a1 = ang + 2 * Math.PI * n / total, big = a1 - ang > Math.PI ? 1 : 0;
+    const [x0, y0] = pt(R, ang), [x1, y1] = pt(R, a1), [x2, y2] = pt(r, a1), [x3, y3] = pt(r, ang);
+    s += `<path class="fatia" data-cat="${k}" d="M${x0},${y0} A${R},${R} 0 ${big} 1 ${x1},${y1} L${x2},${y2} A${r},${r} 0 ${big} 0 ${x3},${y3} Z" fill="${CAT[k].cor}" stroke="var(--pop)" stroke-width="2.5"/>`;
+    ang = a1;
+  });
+  return `<svg viewBox="0 0 160 160" class="anel">${s}<text x="80" y="84" text-anchor="middle" font-size="36" font-weight="700" fill="var(--strong)" font-family="Space Grotesk, Inter">${total}</text>
+    <text x="80" y="104" text-anchor="middle" font-size="11" fill="var(--muted)">${total > 1 ? 'respostas' : 'resposta'}</text></svg>`;
+}
+function especies(a) {
+  const n = [...new Set(a.map(e => (e.organism || '').replace(/\s*\(.*$/, '').trim()).filter(Boolean))];
+  return n.slice(0, 3).join(' · ') + (n.length > 3 ? ` · +${n.length - 3}` : '');
+}
+function sintese(a, cont) {
+  const partes = Object.keys(CAT).filter(k => cont[k]).map(k => `${CAT[k].nome.toLowerCase()} em ${cont[k]}`);
+  const ex = a.find(e => !e.pendente) || a[0];
+  return `${a.length > 1 ? 'Das ' + a.length + ' respostas: ' + partes.join('; ') + '. ' : ''}${ex.pendente ? '' : a.length > 1 ? 'No estudo verificado: ' : ''}${ex.headline}`;
+}
+function mostrarPop(t, modo) {
+  const g = t.dataset.g, f = fatorPorId(t.dataset.f), c = corGrupo[g];
+  if (t.classList.contains('sel') && !modo) return;
   fecharPop(); t.classList.add('sel');
+  const r = resumoCelula(g, f.id), a = [...r.a].sort((x, y) => (x.pendente ? 1 : 0) - (y.pendente ? 1 : 0));
+  const cont = {}; a.forEach(e => { const k = categoria(e, f.id); cont[k] = (cont[k] || 0) + 1; });
+  const cab = `<div class="pop-cab"><span class="pop-ic"><i class="fas fa-bacterium"></i></span><div><h3>${esc(g)} <span>×</span> ${esc(f.nome)}</h3><p class="sub">${esc(especies(a))}</p></div></div>
+    <div class="pop-cont"><span><b>${r.nVer}</b> ${r.nVer === 1 ? 'publicação verificada' : 'publicações verificadas'}</span><span><b>${a.length}</b> ${a.length === 1 ? 'resposta' : 'respostas'}</span>${r.nPen ? `<span class="pend"><b>${r.nPen}</b> a validar</span>` : ''}</div>`;
   let corpo;
-  if (t.dataset.acv) {
-    const itens = (F.acervoItens[g + '|' + f.id] || []).slice(0, 6);
-    corpo = `<p class="pop-acv">Há estudos sobre isso no acervo, mas os números ainda não foram conferidos na fonte. Por isso não aparecem como esfera.</p>
-      <ul class="pop-acv">${itens.map(i => `<li>${esc(i)}</li>`).join('')}</ul>`;
+  if (modo === 'estudos') {
+    const porPub = {}; a.forEach(e => (porPub[e.pub] = porPub[e.pub] || []).push(e));
+    corpo = `<div class="pop-lista">${Object.values(porPub).map(es => { const e = es[0]; return `<div class="ref"><p>${esc(e.source)}</p>
+      <small>${esc(e.kind)} · ${esc(e.location)} · ${e.pendente ? '<span class="pend">a validar</span>' : e.conferido ? '<span class="ok">conferido na fonte</span>' : 'aprovado no levantamento'}</small>
+      ${es.map(x => `<button class="ref-ex" data-estudo="${x.id}"><span>${esc(x.title)}</span><i class="fas fa-chevron-right"></i></button>`).join('')}
+      ${e.doi ? `<a href="${esc(e.doi)}" target="_blank" rel="noopener">${esc(e.doi.replace(/^https?:\/\//, ''))}</a>` : ''}</div>`; }).join('')}</div>
+      <div class="pop-bts"><button class="pop-volta"><i class="fas fa-chart-pie"></i> Voltar ao resumo</button></div>`;
   } else {
-    const a = expsDaCelula(g, f.id);
-    const nA = F.acervo[g + '|' + f.id] || 0;
-    corpo = a.map(e => `<div class="pop-item"><div class="pop-num">${f.id === 'formulacao' && e.prot ? (e.prot.sem !== undefined ? num(e.prot.sem, 1) + '→' + num(e.prot.com, 0) + '%<br><small>sem → com</small>' : '<small>' + esc(e.prot.qual) + '</small>') : e.sobra !== undefined ? (e.sobra <= 100 ? num(e.sobra, 1) + '%<br><small>sobrou</small>' : '+' + num(e.sobra - 100, 0) + '%<br><small>a mais</small>') : '<small>' + esc(e.qual) + '</small>'}</div>
-      <div><p>${esc(e.headline)}</p><small>${esc(e.curto)} · ${esc(e.kind)} · ${esc(e.location)}</small></div></div>`).join('') +
-      (nA ? `<p class="pop-acv" style="margin:8px 0 0">+${nA} resultado(s) no acervo, a conferir.</p>` : '') +
-      `<button class="pop-ir" data-ir="${f.id}" data-jump="${a[0].id}">Ver os gráficos de ${esc(f.nome.toLowerCase())} <i class="fas fa-arrow-right"></i></button>`;
+    corpo = `<div class="pop-meio">${anel(cont, a.length)}<div class="pop-leg">${Object.keys(CAT).filter(k => cont[k]).map(k =>
+      `<button class="leg-cat" data-cat="${k}"><i style="background:${CAT[k].cor}"></i><span>${CAT[k].nome}</span><b>${cont[k]}</b></button>`).join('')}</div></div>
+      <div class="pop-cat" hidden></div>
+      <p class="pop-sint">${esc(sintese(a, cont))}</p>
+      <p class="pop-obs">O anel mostra como se distribuem os resultados reunidos, não a chance de o produto funcionar. Sem estatística informada, o resultado é descritivo.</p>
+      <div class="pop-bts"><button class="pop-ir" data-ir="${f.id}" data-jump="${a[0].id}"><i class="fas fa-chart-line"></i> Ver gráficos</button><button class="pop-est"><i class="fas fa-book"></i> Ver estudos</button></div>`;
   }
-  popRaiz.innerHTML = `<div class="pop" style="--c:${c}" role="dialog"><button class="fechar" aria-label="Fechar"><i class="fas fa-xmark"></i></button>
-    <h3>${esc(g)} · ${esc(f.nome)}</h3><p class="sub">${t.dataset.acv ? 'ainda sem dado conferido' : 'o que os estudos mediram'}</p>${corpo}</div>`;
-  const p = popRaiz.firstElementChild, r = t.getBoundingClientRect(), W = innerWidth, H = innerHeight, pw = p.offsetWidth, ph = p.offsetHeight;
+  popRaiz.innerHTML = `<div class="pop" style="--c:${c}" role="dialog"><button class="fechar" aria-label="Fechar"><i class="fas fa-xmark"></i></button>${cab}${corpo}</div>`;
+  const p = popRaiz.firstElementChild; posicionar(p, t.getBoundingClientRect());
+  p.querySelector('.fechar').onclick = fecharPop;
+  p.addEventListener('click', ev => ev.stopPropagation());
+  const ir = p.querySelector('.pop-ir'); if (ir) ir.onclick = () => abrirFator(ir.dataset.ir, ir.dataset.jump);
+  const est = p.querySelector('.pop-est'); if (est) est.onclick = () => mostrarPop(t, 'estudos');
+  const volta = p.querySelector('.pop-volta'); if (volta) volta.onclick = () => mostrarPop(t, 'resumo');
+  p.querySelectorAll('.pop-lista [data-estudo]').forEach(b => b.onclick = () => abrirEstudo(b.dataset.estudo, t));
+  const caixa = p.querySelector('.pop-cat');
+  const verCat = k => {
+    p.querySelectorAll('.fatia').forEach(s => s.style.opacity = s.dataset.cat === k ? 1 : .22);
+    p.querySelectorAll('.leg-cat').forEach(b => b.classList.toggle('on', b.dataset.cat === k));
+    caixa.hidden = false;
+    caixa.innerHTML = `<b style="color:${CAT[k].cor}">${CAT[k].nome}</b>` + a.filter(e => categoria(e, f.id) === k).map(e =>
+      `<button class="ref-ex" data-estudo="${e.id}"><span>${esc(e.headline)}<small>${esc(e.curto)} · ${esc(e.kind)}${e.pendente ? ' · a validar' : ''} · ${esc(e.sig)}</small></span><i class="fas fa-chevron-right"></i></button>`).join('');
+    caixa.querySelectorAll('[data-estudo]').forEach(b => b.onclick = () => abrirEstudo(b.dataset.estudo, t));
+    posicionar(p, t.getBoundingClientRect());
+  };
+  p.querySelectorAll('.fatia, .leg-cat').forEach(el => {
+    el.addEventListener('click', ev => { ev.stopPropagation(); verCat(el.dataset.cat); });
+    el.addEventListener('pointerenter', ev => { if (ev.pointerType === 'mouse') verCat(el.dataset.cat); });
+  });
+}
+function posicionar(p, r) {
+  const W = innerWidth, H = innerHeight, pw = p.offsetWidth, ph = p.offsetHeight;
   let x = r.right + 10, y = r.top;
   if (x + pw > W - 8) x = r.left - pw - 10;
   if (x < 8) { x = Math.max(8, Math.min(W - pw - 8, r.left + r.width / 2 - pw / 2)); y = r.bottom + 8; if (y + ph > H - 8) y = r.top - ph - 8; }
   y = Math.max(8, Math.min(y, H - ph - 8));
   p.style.left = x + 'px'; p.style.top = y + 'px';
-  p.querySelector('.fechar').onclick = fecharPop;
-  const ir = p.querySelector('.pop-ir'); if (ir) ir.onclick = () => abrirFator(ir.dataset.ir, ir.dataset.jump);
-  p.addEventListener('click', ev => ev.stopPropagation());
 }
-document.addEventListener('click', fecharPop);
+document.addEventListener('click', () => { fecharPop(); fecharDica(); });
 addEventListener('scroll', () => { if (popRaiz.innerHTML) fecharPop(); }, { passive: true });
 
+// ---------- NÍVEL 3: ficha completa do estudo ----------
+function abrirEstudo(id, ancora) {
+  const e = F.exps.find(x => x.id === id); if (!e) return;
+  fecharPop(); fecharDica();
+  const c = corGrupo[e.grupoM], linha = (r, v) => v ? `<div class="fx-l"><b>${r}</b><span>${v}</span></div>` : '';
+  const ov = document.createElement('div'); ov.className = 'ficha-fundo';
+  ov.style.height = document.documentElement.scrollHeight + 'px';
+  ov.innerHTML = `<div class="ficha" style="--c:${c}" role="dialog" aria-label="Ficha do estudo"><button class="fechar" aria-label="Fechar"><i class="fas fa-xmark"></i></button>
+    <p class="eyebrow" style="color:${c}">${esc(e.grupoM)} · ${esc(MEDIDAS[e.medida] || '')}</p><h3>${esc(e.title)}</h3><p class="org">${esc(e.organism)}</p>
+    <p class="resultado">${esc(e.headline)}</p>${e.meaning && e.meaning.trim() !== (e.headline || '').trim() ? `<p class="sentido">${esc(e.meaning)}</p>` : ''}
+    ${linha('Referência', esc(e.source))}${linha('DOI / link', e.doi ? `<a href="${esc(e.doi)}" target="_blank" rel="noopener">${esc(e.doi)}</a>` : '')}
+    ${linha('Tabela ou figura', esc(e.locator))}${linha('Ensaio', esc(e.kind))}${linha('País e local', esc(e.location))}
+    ${linha('Condições', esc(e.condition))}${linha('Comparação', esc(e.baseline))}${linha('Repetições', esc(e.rep))}${linha('Estatística', esc(e.sig))}
+    ${linha('Conta do "quanto sobra"', esc(fatorAtual === 'formulacao' && e.prot ? e.prot.ref : e.sobraRef))}
+    ${linha('Limites', esc(e.note))}${linha('Afiliações e vínculos', esc(e.affiliation))}
+    ${linha('Validação', `<span class="${e.pendente ? 'pend' : e.conferido ? 'ok' : ''}">${e.pendente ? 'Do acervo, ainda a validar. ' : e.conferido ? '' : 'Aprovado no levantamento. '}${esc(e.verification)}</span>`)}
+  </div>`;
+  document.body.appendChild(ov);
+  const ficha = ov.firstElementChild, rr = (ancora && ancora.getBoundingClientRect) ? ancora.getBoundingClientRect() : { top: 40 };
+  ficha.style.top = Math.max(12, Math.min(rr.top + scrollY - 60, document.documentElement.scrollHeight - ficha.offsetHeight - 12)) + 'px';
+  const fechar = () => ov.remove();
+  ov.addEventListener('click', ev => { ev.stopPropagation(); if (ev.target === ov) fechar(); });
+  ficha.querySelector('.fechar').onclick = fechar;
+}
+
 // ---------- VISÃO DO FATOR ----------
+const MED_IC = { sobrevivencia: 'fa-heart-pulse', germinacao: 'fa-seedling', crescimento: 'fa-arrow-trend-up', colonizacao: 'fa-circle-nodes',
+  metabolica: 'fa-bolt', biocontrole: 'fa-shield-virus', beneficio: 'fa-wheat-awn' };
+let ctxFator = null;
 function abrirFator(id, salto) {
-  fecharPop(); fatorAtual = id;
+  fecharPop(); fecharDica(); fatorAtual = id;
   const f = fatorPorId(id), v = F.views[id] || {}, a = expsDoFator(id);
-  const ordem = F.grupos.map(g => g.nome);
-  const ordenados = [...a].sort((x, y) => ordem.indexOf(x.grupoM) - ordem.indexOf(y.grupoM));
+  const meds = Object.keys(MEDIDAS).filter(m => a.some(e => e.medida === m));
+  const nVer = new Set(a.filter(e => !e.pendente).map(e => e.pub)).size, nPen = new Set(a.filter(e => e.pendente && !a.some(x => !x.pendente && x.pub === e.pub)).map(e => e.pub)).size;
+  const ini = salto && (a.find(e => e.id === salto) || {}).medida;
+  ctxFator = { id, a, meds };
   app.innerHTML = `
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <button class="voltar" data-nav=""><i class="fas fa-arrow-left"></i> Visão geral</button><span class="selo"><i class="fas fa-circle-check"></i> ${a.filter(e => e.conferido).length} de ${a.length} estudos conferidos na fonte</span></div>
+      <button class="voltar" data-nav=""><i class="fas fa-arrow-left"></i> Visão geral</button><span class="selo"><i class="fas fa-book-open"></i> ${nVer} publicações verificadas${nPen ? ' · ' + nPen + ' a validar' : ''}</span></div>
     ${navFatores()}
     <div class="hero">
-      <div><div class="hero-ic"><i class="fas ${f.icone}"></i></div><p class="eyebrow">${esc(f.nome)}</p><h1>${esc(v.title || f.nome)}</h1><p class="lead">${esc(v.lead || '')}</p></div>
+      <div><span class="orbe-c hero-orbe" style="--o:${FAT_COR[id]}"><i class="fas ${f.icone}"></i></span><p class="eyebrow" style="color:${FAT_COR[id]}">${esc(f.nome)}</p><h1>${esc(v.title || f.nome)}</h1><p class="lead">${esc(v.lead || '')}</p></div>
       <div class="manejo"><b>No manejo</b>${esc(v.practice || '')}</div>
     </div>
     <div class="integrado">
-      <div class="cab"><div><p class="eyebrow">Todos juntos</p><h2>${id === 'formulacao' ? 'Quanto a proteção segura de cada biológico' : 'Quanto sobra de cada biológico com ' + esc(artigo(id))}</h2>
-        <p>${id === 'formulacao' ? 'Barra clara: o que sobrou sem proteção. Barra cheia: o que sobrou com a formulação protetora, no mesmo teste.' : 'Cada barra compara o biológico com ele mesmo sem o fator (linha de 100%).'} Toque numa linha para ver o gráfico do estudo.</p></div>
-        <span class="chip">${new Set(a.map(e => e.grupoM)).size} grupos · ${a.length} medidas</span></div>
-      ${id === 'formulacao' ? graficoProtecao(a) : graficoIntegrado(a)}
+      ${id === 'formulacao' ? `<div class="cab"><div><p class="eyebrow">Mesmo teste, com e sem proteção</p><h2>Quanto a proteção segura de cada biológico</h2>
+        <p>Barra clara: sem proteção. Barra cheia: com a formulação, no mesmo teste. Toque numa barra para ver o valor.</p></div></div>${graficoProtecao(a)}` : ''}
+      <div class="cab"><div><p class="eyebrow">O que foi medido</p><h2>${id === 'formulacao' ? 'Os estudos, por tipo de medida' : 'Quanto sobra de cada biológico com ' + esc(artigo(id))}</h2>
+        <p>Escolha o que foi medido. Cada medida é uma pergunta diferente: compare os biológicos dentro dela, não entre medidas.</p></div></div>
+      <div class="abas-med orbes tem-on" role="tablist">${meds.map(m => orbe(MED_COR[m], MED_IC[m], MEDIDAS[m], `data-med="${m}" role="tab"`)).join('')}</div>
+      <div id="med-painel"></div>
     </div>
   </div>
-  <div class="cards">${ordenados.map(cartao).join('')}</div>`;
+  <div id="med-cards"></div>`;
   ligarNav();
-  app.querySelectorAll('.linha-int').forEach(l => l.addEventListener('click', () => saltar(l.dataset.id)));
+  app.querySelectorAll('.abas-med [data-med]').forEach(b => b.addEventListener('click', () => mostrarMedida(b.dataset.med)));
+  app.querySelectorAll('.linha-int').forEach(l => ligarLinha(l));
+  mostrarMedida(meds.includes(ini) ? ini : meds[0]);
   app.scrollIntoView({ block: 'start' });
   if (salto) setTimeout(() => saltar(salto), 60);
+}
+function ligarLinha(l) { l.addEventListener('click', ev => { if (ev.target.closest('[data-tip]')) return; saltar(l.dataset.id); }); }
+function mostrarMedida(m) {
+  if (!ctxFator) return;
+  const { id, a } = ctxFator, ordem = F.grupos.map(g => g.nome);
+  const lista = a.filter(e => e.medida === m).sort((x, y) => ordem.indexOf(x.grupoM) - ordem.indexOf(y.grupoM));
+  fecharDica(); ctxFator.med = m;
+  app.querySelectorAll('.abas-med [data-med]').forEach(b => { const on = b.dataset.med === m; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+  const painel = document.getElementById('med-painel');
+  painel.innerHTML = id === 'formulacao' ? '' : `<div class="painel-med">${painelMedida(m, lista)}<p class="nota-painel">Linha tracejada: 100% = o próprio controle de cada estudo. Toque numa barra para ver o valor; toque no nome para ir ao gráfico.</p></div>`;
+  painel.querySelectorAll('.linha-int').forEach(l => ligarLinha(l));
+  const cards = document.getElementById('med-cards');
+  cards.innerHTML = `<div class="cards">${lista.map(cartao).join('')}</div>`;
+  cards.querySelectorAll('.ver-estudo').forEach(b => b.addEventListener('click', ev => { ev.stopPropagation(); abrirEstudo(b.dataset.estudo, b); }));
 }
 function artigo(id) {
   return { temperatura: 'o calor', radiacao: 'o sol (UV)', agua: 'pouca água', compatibilidade: 'produtos químicos', tempo: 'o passar do tempo',
     nutricao: 'adubo', formulacao: 'a formulação', salinidade: 'sal', ph: 'a acidez' }[id] || 'o fator';
 }
 function saltar(id) {
+  const e = F.exps.find(x => x.id === id);
+  if (ctxFator && e && e.medida !== ctxFator.med && ctxFator.meds.includes(e.medida)) mostrarMedida(e.medida);
   const el = document.getElementById('c-' + id); if (!el) return;
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   el.classList.add('realce'); setTimeout(() => el.classList.remove('realce'), 2200);
 }
 
-// Gráfico integrado: todos os organismos do fator na mesma régua "% que sobra"
-function graficoIntegrado(a) {
-  const com = a.filter(e => e.sobra !== undefined).sort((x, y) => x.sobra - y.sobra);
-  const sem = a.filter(e => e.sobra === undefined);
-  const lista = [...com, ...sem];
-  const W = 1000, esq = 300, dir = 80, alt = 46, topo = 30, H = topo + lista.length * alt + 10;
-  const max = 150; // ganhos acima de +50% ficam no limite da régua; o número mostra o valor real
-  const x = v => esq + (W - esq - dir) * Math.min(v, max) / max;
-  let s = `<svg class="g" viewBox="0 0 ${W} ${H}" role="img" aria-label="Quanto sobra de cada biológico">`;
-  [0, 25, 50, 75, 100, 125, 150].filter(t => t <= max).forEach(t => {
-    s += `<line x1="${x(t)}" x2="${x(t)}" y1="${topo - 6}" y2="${H - 6}" stroke="var(--grid)" ${t === 100 ? 'stroke-width="2" stroke-dasharray="5 4" stroke="var(--muted)"' : ''}/>
-      <text x="${x(t)}" y="${topo - 12}" text-anchor="middle" font-size="12" fill="var(--muted)">${t}%</text>`;
-  });
-  s += `<text x="${x(100) + 6}" y="${H - 10}" font-size="11.5" fill="var(--muted)">sem o fator = 100%</text>`;
+// Painéis coordenados: um por tipo de medida; dentro do painel, ordem por organismo (não por valor)
+const dicaSobra = e => esc(`<b>${e.sobra > 100 ? '+' + num(e.sobra - 100, 0) + '% acima do controle' : num(e.sobra, 1) + '% do controle'}</b><br>${esc(e.sobraRef || '')}<br><small>${esc(corta(e.condition, 160))}</small>`);
+function painelMedida(m, lista) {
+  const ordem = F.grupos.map(g => g.nome);
+  lista = [...lista].sort((x, y) => ordem.indexOf(x.grupoM) - ordem.indexOf(y.grupoM));
+  const larg = Math.round((document.getElementById('med-painel') || {}).clientWidth || 1000), max = 150;
+  if (larg >= 640) {
+    const W = 1000, esq = 330, dir = 40, alt = 60, topo = 34, H = topo + lista.length * alt + 8;
+    const x = v => esq + (W - esq - dir) * Math.min(v, max) / max;
+    let s = `<svg class="g" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(MEDIDAS[m])}">`;
+    [0, 50, 100, 150].forEach(t => s += `<line x1="${x(t)}" x2="${x(t)}" y1="${topo - 6}" y2="${H - 4}" stroke="var(--grid)" ${t === 100 ? 'stroke-width="2" stroke-dasharray="5 4" stroke="var(--muted)"' : ''}/><text x="${x(t)}" y="${topo - 12}" text-anchor="middle" font-size="14" fill="var(--muted)">${t === 150 ? '150%+' : t + '%'}</text>`);
+    lista.forEach((e, i) => {
+      const y = topo + i * alt, cy = y + alt / 2, c = corGrupo[e.grupoM];
+      s += `<g class="linha-int" data-id="${e.id}"><rect class="fundo" x="0" y="${y + 2}" width="${W}" height="${alt - 4}" rx="10" fill="transparent"/>
+        <circle cx="14" cy="${cy}" r="7" fill="${c}"/>
+        <text x="30" y="${cy - 4}" font-size="17" font-weight="700" fill="var(--strong)">${esc(e.grupoM)}${e.pendente ? '<tspan fill="#eab308" font-size="13.5" font-weight="600"> · a validar</tspan>' : ''}</text>
+        <text x="30" y="${cy + 16}" font-size="14" fill="var(--muted)">${esc(corta(e.metric, 40))}</text>${barraPainel(e, c, esq, cy, x, 24, 15)}</g>`;
+    });
+    return s + '</svg>';
+  }
+  // celular: 1 unidade do SVG = 1 px na tela, então a letra não encolhe
+  const W = larg, pad = 6, alt = 74, topo = 26, H = topo + lista.length * alt + 4;
+  const x = v => pad + (W - 2 * pad) * Math.min(v, max) / max;
+  let s = `<svg class="g" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(MEDIDAS[m])}">`;
+  [0, 50, 100, 150].forEach(t => s += `<line x1="${x(t)}" x2="${x(t)}" y1="${topo - 4}" y2="${H - 2}" stroke="var(--grid)" ${t === 100 ? 'stroke-width="1.5" stroke-dasharray="4 3" stroke="var(--muted)"' : ''}/><text x="${x(t)}" y="${topo - 10}" text-anchor="${t === 0 ? 'start' : t === 150 ? 'end' : 'middle'}" font-size="11" fill="var(--muted)">${t === 150 ? '150%+' : t + '%'}</text>`);
   lista.forEach((e, i) => {
-    const y = topo + i * alt, c = corGrupo[e.grupoM], cy = y + alt / 2;
+    const y = topo + i * alt, c = corGrupo[e.grupoM];
     s += `<g class="linha-int" data-id="${e.id}"><rect class="fundo" x="0" y="${y + 2}" width="${W}" height="${alt - 4}" rx="10" fill="transparent"/>
-      <circle cx="14" cy="${cy}" r="6" fill="${c}"/>
-      <text x="28" y="${cy - 3}" font-size="14" font-weight="700" fill="var(--strong)">${esc(e.grupoM)} · ${esc(e.curto)}</text>
-      <text x="28" y="${cy + 14}" font-size="11.5" fill="var(--muted)">${esc(e.kind)}${ehFora(e) ? ' · fora do Brasil' : ''}</text>`;
-    if (e.sobra !== undefined) {
-      const w = Math.max(x(e.sobra) - esq, 3);
-      s += `<rect x="${esq}" y="${cy - 9}" width="${x(100) - esq}" height="18" rx="9" fill="${hexA(c, .1)}"/>
-        <rect x="${esq}" y="${cy - 9}" width="${w}" height="18" rx="9" fill="${c}"><title>${esc(e.sobraRef)}</title></rect>
-        <text x="${esq + w + 8}" y="${cy + 5}" font-size="14" font-weight="700" fill="var(--strong)">${e.sobra > 100 ? '+' + num(e.sobra - 100, 0) + '%' : num(e.sobra, 1) + '%'}</text>`;
-    } else {
-      s += `<rect x="${esq}" y="${cy - 13}" width="${x(100) - esq}" height="26" rx="13" fill="none" stroke="${c}" stroke-dasharray="4 4"/>
-        <text x="${esq + 14}" y="${cy + 5}" font-size="13" fill="var(--text)">${esc(e.qual)} · sem número comparável</text>`;
-    }
-    s += `</g>`;
+      <circle cx="${pad + 5}" cy="${y + 16}" r="5" fill="${c}"/>
+      <text x="${pad + 16}" y="${y + 21}" font-size="14.5" font-weight="700" fill="var(--strong)">${esc(e.grupoM)}${e.pendente ? '<tspan fill="#eab308" font-size="12" font-weight="600"> · a validar</tspan>' : ''}</text>
+      <text x="${pad + 16}" y="${y + 38}" font-size="12" fill="var(--muted)">${esc(corta(e.metric, Math.floor((W - 30) / 6.4)))}</text>${barraPainel(e, c, pad, y + 56, x, 16, 12.5)}</g>`;
   });
   return s + '</svg>';
 }
+function barraPainel(e, c, esq, cy, x, h, fs) {
+  if (e.sobra !== undefined) return `<rect x="${esq}" y="${cy - h / 2}" width="${x(100) - esq}" height="${h}" rx="${h / 2}" fill="${hexA(c, .1)}"/>
+    <rect x="${esq}" y="${cy - h / 2}" width="${Math.max(x(e.sobra) - esq, 6)}" height="${h}" rx="${h / 2}" fill="${c}" data-tip="${dicaSobra(e)}"/>`;
+  return `<rect x="${esq}" y="${cy - h / 2 - 3}" width="${x(100) - esq}" height="${h + 6}" rx="${h / 2 + 3}" fill="none" stroke="${c}" stroke-dasharray="4 4"/><text x="${esq + 12}" y="${cy + fs / 3}" font-size="${fs}" fill="var(--text)">${esc(e.qual || 'sem número comparável')}</text>`;
+}
+let modoPainel = null;
+addEventListener('resize', () => {
+  const p = document.getElementById('med-painel'); if (!p || !ctxFator || !ctxFator.med) return;
+  const novo = p.clientWidth >= 640 ? 'largo' : 'estreito:' + Math.round(p.clientWidth / 20);
+  if (novo !== modoPainel) { modoPainel = novo; mostrarMedida(ctxFator.med); }
+});
 
 function graficoProtecao(a) {
   const W = 1000, esq = 300, dir = 90, alt = 58, topo = 30, H = topo + a.length * alt + 10, max = 125;
@@ -226,23 +341,22 @@ function graficoProtecao(a) {
   return s + '</svg>';
 }
 
-// ---------- CARTÕES com gráficos ----------
+// ---------- CARTÕES (nível 1: pergunta, organismo, eixos, legenda, conclusão, referência curta) ----------
 function cartao(e) {
   const c = corGrupo[e.grupoM];
-  const conferido = /^reconferido|reconferido em/i.test(e.verification || '');
   return `<article class="card" id="c-${e.id}" style="--c:${c}">
-    <div class="card-top"><span class="chip g"><i class="fas fa-circle" style="font-size:7px"></i>${esc(e.grupoM)}</span><span class="chip">${esc(e.kind)}</span>
-      <span class="chip ${ehFora(e) ? 'fora' : ''}">${esc(e.location)}</span><span class="chip ${e.conferido ? 'ok' : 'pend'}"><i class="fas ${e.conferido ? 'fa-circle-check' : 'fa-hourglass-half'}"></i>${e.conferido ? 'conferido na fonte' : 'a conferir'}</span></div>
+    <div class="card-top"><span class="chip g"><i class="fas fa-circle" style="font-size:7px"></i>${esc(e.grupoM)}</span>${e.pendente ? '<span class="chip pend"><i class="fas fa-hourglass-half"></i>a validar</span>' : e.conferido ? '<span class="chip ok"><i class="fas fa-circle-check"></i>conferido na fonte</span>' : ''}</div>
     <h3>${esc(e.title)}</h3><p class="org">${esc(e.organism)}</p>
     <p class="metrica">${esc(e.metric)}${e.unit ? ' · ' + esc(e.unit) : ''}</p>
     ${desenhar(e, c)}
-    <p class="resultado">${esc(e.headline)}</p>${e.meaning && e.meaning.trim() !== (e.headline || '').trim() ? `<p class="sentido">${esc(e.meaning)}</p>` : ''}
-    ${fatorAtual === 'formulacao' && e.prot ? `<p class="conta"><i class="fas fa-calculator"></i> Sem × com proteção: ${esc(e.prot.ref)}.</p>` : e.sobraRef ? `<p class="conta"><i class="fas fa-calculator"></i> Conta do "quanto sobra": ${esc(e.sobraRef)}.</p>` : ''}
-    <details class="fonte"><summary><i class="fas fa-book"></i> Fonte e limites</summary>
-      <p><b>Fonte:</b> ${esc(e.source)} · ${esc(e.locator)}</p><p><b>Condições:</b> ${esc(e.condition)}</p>
-      <p><b>Comparação:</b> ${esc(e.baseline)}</p><p><b>Repetições:</b> ${esc(e.rep)}</p><p><b>Vínculos:</b> ${esc(e.affiliation)}</p>
-      <p><b>Limite:</b> ${esc(e.note)}</p><p class="${conferido ? '' : 'aconferir'}"><b>Conferência:</b> ${esc(e.verification)}</p></details>
+    <p class="resultado">${esc(e.headline)}</p>
+    <div class="card-pe"><span><i class="fas fa-book"></i> ${esc(refCurta(e))} · ${esc(e.kind)} · ${esc(e.location)}</span><button class="ver-estudo" data-estudo="${e.id}">Ver estudo <i class="fas fa-chevron-right"></i></button></div>
   </article>`;
+}
+// dica (nível 2) de um valor medido
+function dicaValor(e, rot, serie, v, ref) {
+  const pct = ref ? ` <small>(${num(v / ref * 100, 0)}% da referência)</small>` : '';
+  return esc(`<b>${esc(num(v, 4))} ${esc(e.unit || '')}</b>${pct}<br>${esc(rot)}${serie && serie !== rot ? ' · ' + esc(serie) : ''}<br><small>${esc(corta(e.condition, 160))}</small>`);
 }
 
 // ---------- tipos de gráfico ----------
@@ -302,15 +416,12 @@ function gLinha(e, c, log) {
     g += `<defs><linearGradient id="${id}${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${cores[k]}" stop-opacity="${e.series.length > 1 ? .18 : .35}"/><stop offset="1" stop-color="${cores[k]}" stop-opacity="0"/></linearGradient></defs>`;
     g += `<path d="${caminhoSuave(pts)} L${pts[pts.length - 1][0]},${T + h} L${pts[0][0]},${T + h} Z" fill="url(#${id}${k})"/>`;
     g += `<path d="${caminhoSuave(pts)}" fill="none" stroke="${cores[k]}" stroke-width="3" stroke-linecap="round"/>`;
-    const imin = q.values.indexOf(Math.min(...q.values));
     pts.forEach((p, i) => {
-      const outros = e.series.filter((_, j) => j !== k).map(o => o.values[i]);
-      const acima = !outros.length || q.values[i] >= Math.max(...outros) ? -12 : 21;
-      g += `<circle cx="${p[0]}" cy="${p[1]}" r="${i === imin ? 6.5 : 4.5}" fill="${i === imin ? cores[k] : 'var(--bg)'}" stroke="${cores[k]}" stroke-width="2.5"/>
-        <text x="${p[0]}" y="${p[1] + acima}" text-anchor="${i === 0 ? 'start' : i === pts.length - 1 ? 'end' : 'middle'}" dx="${i === 0 ? 4 : i === pts.length - 1 ? -4 : 0}" font-size="12" font-weight="700" fill="${cores[k]}" paint-order="stroke" stroke="var(--bg)" stroke-width="3">${num(q.values[i])}</text>`;
+      g += `<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="var(--bg)" stroke="${cores[k]}" stroke-width="2.5" pointer-events="none"/>
+        <circle class="alvo" cx="${p[0]}" cy="${p[1]}" r="15" fill="transparent" data-tip="${dicaValor(e, e.labels[i], q.name, q.values[i], i > 0 ? q.values[0] : 0)}"/>`;
     });
   });
-  return g + '</svg>';
+  return g + '</svg><p class="nota-curva">Curva suavizada só para leitura; os pontos são as medidas (toque para ver o valor).</p>';
 }
 function gColunas(e, c) {
   const W = 560, H = 260, L = 46, R = 12, T = 26, B = 40, w = W - L - R, h = H - T - B;
@@ -323,8 +434,7 @@ function gColunas(e, c) {
     const gx = L + i * gw + gw / 2 - (bw * e.series.length + 6 * (e.series.length - 1)) / 2;
     e.series.forEach((q, k) => {
       const v = q.values[i], y = yPos(v, s, T, h), x = gx + k * (bw + 6);
-      g += `<rect x="${x}" y="${y}" width="${bw}" height="${T + h - y}" rx="7" fill="${cores[k]}" opacity="${k === 0 && e.series.length > 1 ? .55 : .95}"/>
-        <text x="${x + bw / 2}" y="${y - 7}" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--strong)">${num(v)}</text>`;
+      g += `<rect x="${x}" y="${y}" width="${bw}" height="${Math.max(T + h - y, 2)}" rx="7" fill="${cores[k]}" opacity="${k === 0 && e.series.length > 1 ? .55 : .95}" data-tip="${dicaValor(e, l, q.name, v, k > 0 ? e.series[0].values[i] : 0)}"/>`;
     });
     g += `<text x="${L + i * gw + gw / 2}" y="${H - 14}" text-anchor="middle" font-size="12.5" fill="var(--muted)">${esc(l)}</text>`;
   });
@@ -344,7 +454,7 @@ function gBarras(e, c) {
     const queda = ref && i !== iref ? v / ref : null;
     g += `<text x="${L - 10}" y="${y + bh / 2 + 4}" text-anchor="end" font-size="${alt > 30 ? 12.5 : 11.5}" fill="var(--text)">${esc(l)}</text>
       <rect x="${L}" y="${y}" width="${W - L - R}" height="${bh}" rx="${bh / 2}" fill="${hexA('#94a3b8', .08)}"/>
-      <rect x="${L}" y="${y}" width="${Math.max(X(v) - L, v > 0 ? 4 : 0)}" height="${bh}" rx="${bh / 2}" fill="${cor}" opacity="${queda !== null && queda < .5 ? 1 : .8}"/>
+      <rect x="${L}" y="${y}" width="${Math.max(X(v) - L, 6)}" height="${bh}" rx="${bh / 2}" fill="${cor}" opacity="${queda !== null && queda < .5 ? 1 : .8}" data-tip="${dicaValor(e, l, '', v, i !== iref ? ref : 0)}"/>
       ${v === 0 ? `<text x="${L + 6}" y="${y + bh / 2 + 4}" font-size="11.5" font-weight="700" fill="#f87171">zero</text>` : `<text x="${X(v) + 7}" y="${y + bh / 2 + 4}" font-size="12.5" font-weight="700" fill="var(--strong)">${num(v)}</text>`}`;
   });
   return g + '</svg>';
@@ -435,85 +545,28 @@ addEventListener('message', ev => {
 });
 try { if (parent !== window && parent.document.documentElement.classList.contains('light-mode')) document.documentElement.classList.add('light-mode'); } catch (_) {}
 
+// ---------- NÍVEL 2: dica junto do toque (fica aberta até tocar fora ou fechar) ----------
+const dica = document.createElement('div'); dica.className = 'dica'; dica.hidden = true; document.body.appendChild(dica);
+let dicaAlvo = null;
+function fecharDica() { if (!dica.hidden) dica.hidden = true; if (dicaAlvo) dicaAlvo.classList.remove('dica-on'); dicaAlvo = null; }
+function mostrarDica(el) {
+  if (dicaAlvo === el && !dica.hidden) return;
+  fecharDica(); dicaAlvo = el; el.classList.add('dica-on');
+  dica.innerHTML = `<button class="dica-x" aria-label="Fechar"><i class="fas fa-xmark"></i></button>` + el.getAttribute('data-tip');
+  dica.hidden = false;
+  const r = el.getBoundingClientRect(), dw = dica.offsetWidth, dh = dica.offsetHeight;
+  let x = r.left + r.width / 2 - dw / 2 + scrollX, y = r.top + scrollY - dh - 10;
+  if (r.top - dh - 10 < 4) y = r.bottom + scrollY + 10;
+  x = Math.max(8 + scrollX, Math.min(x, scrollX + innerWidth - dw - 8));
+  dica.style.left = x + 'px'; dica.style.top = y + 'px';
+  dica.querySelector('.dica-x').onclick = ev => { ev.stopPropagation(); fecharDica(); };
+}
+dica.addEventListener('click', ev => ev.stopPropagation());
+app.addEventListener('click', ev => { const el = ev.target.closest('[data-tip]'); if (el) { ev.stopPropagation(); mostrarDica(el); } });
+app.addEventListener('pointerover', ev => { if (ev.pointerType !== 'mouse') return; const el = ev.target.closest('[data-tip]'); if (el) mostrarDica(el); });
+
 visaoGeral();
 
-
-// ---------- SANKEY: problema → biológico → mecanismo ----------
-const SK = {
-  nos: [
-    { id: 's1', nome: 'Solo compactado', col: 0, cor: '#ef4444' }, { id: 's2', nome: 'Pouco fósforo', col: 0, cor: '#f97316' },
-    { id: 's3', nome: 'Doenças (patógenos)', col: 0, cor: '#d946ef' }, { id: 's4', nome: 'Falta de nitrogênio', col: 0, cor: '#eab308' },
-    { id: 's5', nome: 'Seca e sal', col: 0, cor: '#fb923c' }, { id: 's6', nome: 'Insetos-praga', col: 0, cor: '#a3a3a3' },
-    ...F.grupos.map(g => ({ id: 'g:' + g.nome, nome: g.nome, col: 1, cor: g.cor })),
-    { id: 'o1', nome: 'Agregação do solo', col: 2, cor: '#64748b' }, { id: 'o2', nome: 'Solubilização de P', col: 2, cor: '#f97316' },
-    { id: 'o3', nome: 'Controle de doenças', col: 2, cor: '#d946ef' }, { id: 'o6', nome: 'Defesa da planta (ISR)', col: 2, cor: '#8b5cf6' },
-    { id: 'o4', nome: 'Fixação de N', col: 2, cor: '#22c55e' }, { id: 'o7', nome: 'Hifas: água e P', col: 2, cor: '#fbbf24' },
-    { id: 'o5', nome: 'ACC desaminase', col: 2, cor: '#ef4444' }, { id: 'o8', nome: 'Hormônios (AIA, ALA)', col: 2, cor: '#fb7185' },
-    { id: 'o9', nome: 'Controle de insetos', col: 2, cor: '#818cf8' }
-  ],
-  fluxos: [
-    ['s1', 'Bacillus', 'o1', 'Bacillus produz biofilme (EPS), que ajuda a agregar o solo.'],
-    ['s1', 'Azospirillum', 'o1', 'Azospirillum produz EPS nas raízes e cria microambientes.'],
-    ['s1', 'Micorrizas', 'o1', 'As hifas e a glomalina das micorrizas ajudam a agregar o solo.'],
-    ['s2', 'Pseudomonas', 'o2', 'Pseudomonas solta fosfato com ácidos orgânicos (como o glucônico).'],
-    ['s2', 'Bacillus', 'o2', 'Bacillus solubiliza fosfato pela via PQQ-GDH.'],
-    ['s2', 'Micorrizas', 'o7', 'As hifas exploram o solo além das raízes e levam fósforo à planta.'],
-    ['s3', 'Trichoderma', 'o3', 'Trichoderma parasita e degrada outros fungos.'],
-    ['s3', 'Bacillus', 'o3', 'Bacillus secreta lipopeptídeos antifúngicos (iturinas).'],
-    ['s3', 'Pseudomonas', 'o3', 'Pseudomonas tira o ferro dos patógenos com sideróforos.'],
-    ['s3', 'Pseudomonas', 'o6', 'Pseudomonas ativa a resistência sistêmica induzida (ISR).'],
-    ['s4', 'Rizóbios', 'o4', 'Rizóbios fixam N dentro dos nódulos.'],
-    ['s4', 'Azospirillum', 'o4', 'Azospirillum fixa N associado às raízes, em taxa menor.'],
-    ['s4', 'Methylobacterium', 'o4', 'Methylobacterium symbioticum fixa N na superfície das folhas.'],
-    ['s4', 'PNSB', 'o4', 'Bactérias púrpuras fixam N e liberam amônio.'],
-    ['s5', 'Azospirillum', 'o5', 'Azospirillum quebra o etileno de estresse (ACC desaminase).'],
-    ['s5', 'Bacillus', 'o1', 'Bacillus forma biofilme que retém umidade.'],
-    ['s5', 'Micorrizas', 'o7', 'As hifas ajudam a planta a captar água em solo seco.'],
-    ['s5', 'PNSB', 'o8', 'Bactérias púrpuras produzem ALA e AIA, ligados à tolerância da planta ao estresse.'],
-    ['s6', 'Bioinseticidas', 'o9', 'Bt, Beauveria e Metarhizium intoxicam ou infectam insetos-praga.']
-  ]
-};
-function desenharSankey() {
-  const box = document.getElementById('sankey'); if (!box || !window.d3) return;
-  box.innerHTML = '';
-  const vertical = box.clientWidth < 760;
-  const W = box.clientWidth || 900, H = vertical ? 880 : 640;
-  const nos = SK.nos.map(n => ({ ...n })), porId = Object.fromEntries(nos.map(n => [n.id, n]));
-  const cols = [[], [], []]; nos.forEach(n => cols[n.col].push(n));
-  const margem = vertical ? 70 : 170, faixa = vertical ? H : W, pos = [margem, faixa / 2, faixa - margem];
-  cols.forEach((g, ci) => { const cruz = vertical ? W : H, passo = cruz / (g.length + 1);
-    g.forEach((n, i) => { if (vertical) { n.x = passo * (i + 1); n.y = pos[ci]; } else { n.x = pos[ci]; n.y = passo * (i + 1); } }); });
-  const links = [];
-  SK.fluxos.forEach(([a, b, c, d], k) => { const A = porId[a], B = porId['g:' + b], C = porId[c];
-    links.push({ s: A, t: B, k, d, cor: B.cor }, { s: B, t: C, k, d, cor: B.cor }); });
-  const svg = d3.select(box).append('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%');
-  const gen = vertical ? d3.linkVertical().source(l => [l.s.x, l.s.y + 10]).target(l => [l.t.x, l.t.y - 10])
-                       : d3.linkHorizontal().source(l => [l.s.x + 12, l.s.y]).target(l => [l.t.x - 12, l.t.y]);
-  const L = svg.append('g').selectAll('path').data(links).enter().append('path').attr('d', gen).attr('fill', 'none')
-    .attr('stroke', l => l.cor).attr('stroke-width', 5).attr('stroke-opacity', .22).style('cursor', 'pointer');
-  const N = svg.append('g').selectAll('g').data(nos).enter().append('g').attr('transform', n => `translate(${n.x},${n.y})`).style('cursor', 'pointer');
-  N.append('circle').attr('r', n => n.col === 1 ? 11 : 8).attr('fill', n => hexA(n.cor, .3)).attr('stroke', n => n.cor).attr('stroke-width', 2.2);
-  const T = N.append('text').text(n => n.nome).attr('fill', 'var(--strong)').style('font-size', vertical ? '11px' : '13px').style('font-weight', 700)
-    .style('font-family', 'Inter, sans-serif').style('pointer-events', 'none').attr('paint-order', 'stroke').attr('stroke', 'var(--bg)').attr('stroke-width', 3);
-  if (vertical) T.attr('text-anchor', 'start').attr('transform', n => n.col === 2 ? 'rotate(50) translate(14,4)' : 'rotate(-50) translate(14,4)');
-  else T.attr('dy', '.35em').attr('x', n => n.col === 2 ? 16 : n.col === 0 ? -16 : 0).attr('y', n => n.col === 1 ? -20 : 0)
-        .attr('text-anchor', n => n.col === 2 ? 'start' : n.col === 0 ? 'end' : 'middle');
-  const info = document.getElementById('sk-info');
-  const mostrar = (titulo, texto, cor, ativos) => {
-    L.attr('stroke-opacity', l => ativos.has(l.k) ? .9 : .06).attr('stroke-width', l => ativos.has(l.k) ? 8 : 5);
-    info.style.setProperty('--c', cor);
-    info.innerHTML = `<i class="fas fa-diagram-project"></i><div><b>${esc(titulo)}</b><span>${texto}</span></div>`;
-  };
-  const tocarLink = l => mostrar('Caminho', esc(l.d), l.cor, new Set([l.k]));
-  const tocarNo = n => {
-    const ks = new Set(SK.fluxos.map((f, k) => [f, k]).filter(([f]) => f[0] === n.id || 'g:' + f[1] === n.id || f[2] === n.id).map(([, k]) => k));
-    const lista = [...ks].map(k => '• ' + esc(SK.fluxos[k][3])).join('<br>');
-    mostrar(n.nome, lista || 'Sem caminho desenhado.', n.cor, ks);
-  };
-  L.on('click', (ev, l) => { ev.stopPropagation(); tocarLink(l); }).on('pointerenter', (ev, l) => ev.pointerType === 'mouse' && tocarLink(l));
-  N.on('click', (ev, n) => { ev.stopPropagation(); tocarNo(n); }).on('pointerenter', (ev, n) => ev.pointerType === 'mouse' && tocarNo(n));
-}
-let skTimer; addEventListener('resize', () => { clearTimeout(skTimer); skTimer = setTimeout(() => { if (!fatorAtual) desenharSankey(); }, 200); });
 
 // ---------- altura automática dentro do index (iframe) ----------
 if (parent !== window) {

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RizoWiki · Mecanismos</title>
+<link rel="stylesheet" href="css/all.min.css">
+<style>
+:root { --bg:#050816; --panel:rgba(15,23,42,.62); --panel-b:rgba(255,255,255,.08); --text:#cbd5e1; --muted:#94a3b8; --strong:#fff;
+  --chip:rgba(255,255,255,.05); --chip-b:rgba(255,255,255,.14); --pill:#0f172a; --pop:#0f172a; --shadow:0 20px 50px rgba(0,0,0,.55); --accent:#0ea5e9; }
+html.light-mode { --bg:#f1f5f9; --panel:#ffffff; --panel-b:#e2e8f0; --text:#334155; --muted:#64748b; --strong:#0f172a;
+  --chip:#f8fafc; --chip-b:#cbd5e1; --pill:#ffffff; --pop:#ffffff; --shadow:0 18px 40px rgba(15,23,42,.18); }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:Inter, system-ui, sans-serif; overflow-x:hidden; }
+html.embutido body { background:transparent; }
+button { font:inherit; color:inherit; cursor:pointer; touch-action:manipulation; }
+.wrap { max-width:1500px; margin:0 auto; padding:22px clamp(12px,3vw,40px) 60px; }
+.panel { background:var(--panel); border:1px solid var(--panel-b); border-radius:18px; padding:20px 22px; backdrop-filter:blur(12px); }
+.eyebrow { font-size:11px; letter-spacing:.18em; text-transform:uppercase; font-weight:800; color:var(--accent); margin:0 0 6px; }
+h1,h3 { color:var(--strong); margin:0; font-family:'Space Grotesk', Inter, sans-serif; letter-spacing:-.02em; }
+h1 { font-size:clamp(24px,3vw,36px); line-height:1.1; }
+.lead { color:var(--muted); font-size:15px; line-height:1.55; margin:8px 0 0; max-width:900px; }
+.rolagem { overflow-x:auto; margin-top:16px; }
+#mec { min-width:860px; }
+svg.sk { width:100%; height:auto; display:block; overflow:visible; }
+.col-tit { font-size:11px; letter-spacing:.16em; font-weight:800; fill:var(--muted); }
+.lig { cursor:pointer; } .lig .v { stroke-opacity:.5; transition:stroke-opacity .2s; }
+.lig.on .v { stroke-opacity:1; } .lig.off .v { stroke-opacity:.08; }
+.no { cursor:pointer; outline:none; transition:opacity .2s; } .no.off { opacity:.3; }
+.no:hover rect, .no:focus rect { stroke:var(--strong); }
+.legenda { display:flex; flex-wrap:wrap; gap:8px 22px; align-items:center; margin-top:14px; font-size:12.5px; color:var(--muted); }
+.legenda > span { display:inline-flex; align-items:center; gap:8px; }
+.st { display:inline-flex; align-items:center; font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:999px; color:var(--s);
+  border:1px solid color-mix(in srgb, var(--s) 50%, transparent); background:color-mix(in srgb, var(--s) 12%, transparent); }
+.nota { font-size:12.5px; color:var(--muted); line-height:1.5; margin:12px 0 0; }
+.pop { position:absolute; z-index:60; width:min(460px, calc(100vw - 24px)); background:var(--pop); border:1px solid var(--panel-b); border-radius:16px;
+  box-shadow:var(--shadow); padding:16px; border-top:4px solid var(--c); animation:aparece .15s ease-out; }
+@keyframes aparece { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+.pop h3 { font-size:17px; padding-right:40px; }
+.pop .sub { font-size:12px; color:var(--muted); margin:3px 0 6px; }
+.pop .fechar { position:absolute; right:10px; top:8px; width:38px; height:38px; border-radius:10px; border:0; background:var(--chip); color:var(--muted); }
+.cam { border-top:1px solid var(--panel-b); padding:10px 0 6px; }
+.rota { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0; font-size:12px; color:var(--muted); }
+.rota b { color:var(--c); } .rota i { font-size:10px; }
+.cam .txt { margin:5px 0; font-size:13.5px; line-height:1.5; color:var(--strong); }
+.refs { display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; margin:0; font-size:11.5px; color:var(--muted); }
+.refs a { color:var(--accent); }
+.dica-toque { position:absolute; z-index:70; pointer-events:none; font-size:12.5px; font-weight:700; color:var(--strong); background:var(--pop);
+  border:1px solid var(--chip-b); border-radius:999px; padding:6px 12px; box-shadow:var(--shadow); white-space:nowrap; animation:aparece .15s ease-out; }
+.dica-toque[hidden] { display:none; }
+.dica-toque i { color:var(--accent); margin-right:4px; }
+</style>
+</head>
+<body>
+<div class="wrap"><div class="panel">
+  <p class="eyebrow">Mecanismos de ação</p>
+  <h1>Do problema no campo ao modo de ação do biológico</h1>
+  <p class="lead">Toque num problema, num microrganismo ou num mecanismo para acender os caminhos ligados a ele. Toque de novo para ler a explicação com a fonte; um terceiro toque apaga.</p>
+  <div class="rolagem"><div id="mec"></div></div>
+  <div class="legenda" id="leg"></div>
+  <p class="nota"><i class="fas fa-circle-info" style="color:var(--accent)"></i> Cada caminho resume o que foi descrito para estirpes estudadas, não para o gênero inteiro. Todas as linhas têm a mesma espessura: o diagrama mostra ligações, não quantidade de evidência. Os resultados medidos estão na aba Fatores.</p>
+</div></div>
+<div id="pop-raiz"></div>
+<script src="js/mecanismos.js"></script>
+</body>
+</html>

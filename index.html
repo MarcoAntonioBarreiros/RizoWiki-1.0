@@ -1168,6 +1168,10 @@
                         class="nav-link hover:text-bio-red py-2 flex flex-col items-center" id="nav-factors"><i
                             class="fas fa-exclamation-triangle text-lg md:hidden mb-1"></i><span
                             class="hidden md:inline">FATORES</span></button>
+                    <button onclick="switchView('mecanismos')"
+                        class="nav-link hover:text-bio-accent py-2 flex flex-col items-center" id="nav-mecanismos"><i
+                            class="fas fa-diagram-project text-lg md:hidden mb-1"></i><span
+                            class="hidden md:inline">MECANISMOS</span></button>
                     <button onclick="switchView('lab')"
                         class="nav-link hover:text-bio-leaf py-2 flex flex-col items-center" id="nav-lab"><i
                             class="fas fa-flask text-lg md:hidden mb-1"></i><span
@@ -1197,6 +1201,8 @@
                     class="fas fa-project-diagram"></i></button>
             <button onclick="switchView('factors')" class="text-gray-500 hover:text-bio-red"><i
                     class="fas fa-exclamation-triangle"></i></button>
+            <button onclick="switchView('mecanismos')" class="text-gray-500 hover:text-bio-accent"><i
+                    class="fas fa-diagram-project"></i></button>
             <button onclick="switchView('lab')" class="nav-lab-mobile text-gray-500 hover:text-bio-leaf"><i
                     class="fas fa-flask"></i></button>
         </div>
@@ -1545,6 +1551,10 @@
         <div class="container mx-auto px-4 md:px-6">
             <h2 class="font-display text-4xl md:text-5xl text-white font-bold mb-6">Fatores Críticos</h2>
             <p class="text-xl text-gray-400 mb-4 max-w-4xl">Variáveis que decidem se o inoculante funciona.</p>
+        </div>
+        <!-- Atlas de evidências (analytics.html) primeiro, na largura toda; depois o guia de boas práticas e o simulador -->
+        <div id="analytics-container" class="w-full mt-2 mb-12"></div>
+        <div class="container mx-auto px-4 md:px-6">
             <p class="fc-dica mb-12"><i class="fas fa-hand-pointer mr-2"></i> Toque em um cartão para ver o porquê, o que fazer e a fonte.</p>
 
             <div class="mb-16">
@@ -1725,7 +1735,11 @@
 
         <!-- FIM DA CRITICAL SECTION -->
 
-        <div id="analytics-container" class="mt-8 w-full mb-20"></div>
+    </section>
+
+    <!-- MECANISMOS DE AÇÃO (Sankey que saiu da aba Fatores) -->
+    <section id="view-mecanismos" class="view-section bg-bio-dark">
+        <div id="mecanismos-container" class="w-full mb-20"></div>
     </section>
 
     <!-- NOVA SEÇÃO LAB (SUBSTITUÍDA) -->
@@ -3537,7 +3551,7 @@
                         f2.onload = () => {
                             if (isLight) f2.contentWindow.postMessage('force-light', '*');
                         };
-                        // A aba Fatores (analytics.html) informa a própria altura: matriz, páginas por fator e Sankey
+                        // A aba Fatores (analytics.html) informa a própria altura: matriz e páginas por fator
                         window.addEventListener('message', (ev) => {
                             if (ev.source === f2.contentWindow && ev.data && ev.data.rizoAltura) {
                                 f2.style.height = (ev.data.rizoAltura + 8) + 'px';
@@ -3545,6 +3559,24 @@
                         });
 
                         a.appendChild(f2);
+                    }
+                }
+                // 3. Mecanismos de Ação (aba própria)
+                if (view === "mecanismos") {
+                    const m = document.getElementById("mecanismos-container");
+                    if (m && !m.dataset.loaded) {
+                        m.dataset.loaded = "true";
+                        const f3 = document.createElement("iframe");
+                        f3.src = "mecanismos.html";
+                        f3.style.width = "100%";
+                        f3.style.height = "900px";
+                        f3.style.border = "none";
+                        f3.style.background = "transparent";
+                        f3.onload = () => { if (isLight) f3.contentWindow.postMessage('force-light', '*'); };
+                        window.addEventListener('message', (ev) => {
+                            if (ev.source === f3.contentWindow && ev.data && ev.data.rizoAltura) f3.style.height = (ev.data.rizoAltura + 8) + 'px';
+                        });
+                        m.appendChild(f3);
                     }
                 }
             };
