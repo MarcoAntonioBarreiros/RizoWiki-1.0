@@ -11,7 +11,7 @@ COMO ABRIR (pendrive, sem internet)
 
 O QUE O MODO TELA FAZ
 - Letra maior (base 18 px) e botões maiores para toque.
-- Esconde a aba Lab.
+- Esconde a aba Lab. O simulador de viabilidade agora fica na aba Fatores, então continua visível no modo tela.
 - Depois de 3 minutos sem toque, volta sozinho para a página inicial.
 
 IMAGENS NOVAS (quando ficarem prontas)
@@ -32,5 +32,29 @@ Para mostrar um deles, confira a fonte, corrija os dados e mude "verificado" par
 PENDÊNCIAS QUE NÃO FORAM ALTERADAS (para revisão)
 - assets/data/solverData.js, objetivo "Recuperação de Solo Compactado": "Dose: Dobrar a dose de Priestia em áreas críticas." (dose sem fonte).
 - Methylobacterium, "Onde faz sentido": "Quando se busca o efeito 'Stay-green'" — efeito não confirmado nos ensaios citados.
-- Aba Fatores, card "Efeito Terroir": +24% e +11% (coinoculação B119 + B2084) marcados com data-verificar="true".
 - Selo de evidência: bioinseticidas, pseudomonas, trichoderma e micorrizas estão como "em_revisao" (sem selo).
+- Methylobacterium, "Onde faz sentido": "Previsão de veranicos ou altas temperaturas" — sem ensaio localizado.
+- Simulador: os parâmetros de cada organismo (resiliência, logMax, logMin) são ilustrativos, sem fonte. O número de
+  "bactérias ainda vivas" é a conta do modelo, não uma medida.
+
+SEGUNDA RODADA DA REVISÃO (aplicada nesta versão)
+- Bacillus: dose do BiomaPhos (100 mL/ha na semente, 150 mL/ha no sulco, semear em até 24 h) — Embrapa, Comunicado Técnico 252.
+- Methylobacterium: dados do rótulo Utrisha N (milho; 3×10⁷ UFC/g, produto sólido; 0,333 kg/ha via folha, V4 a V8; calda sem cloro).
+- Trichoderma: tirado "ação restrita ao solo/raiz" (o Trichodermil SC é registrado para uso via folha); doses da bula.
+- Micorrizas: Rootella BR, 120 g/ha. Solver (Fósforo): doses por produto.
+- Bioinseticidas: tirado "áreas próximas a sedes ou água". Pseudomonas: "(limpeza)" virou "como apoio ao manejo".
+- Sankey (Fatores): a saída "Antibiose" virou "Controle de doenças" (micoparasitismo e sideróforos não são antibiose).
+- Simulador: o número grande passou a ser a fração real de bactérias vivas no modelo (antes era a posição numa escala:
+  perder 90% das células aparecia como 87%).
+- Fundamentos e Holobionte: frases de fotossíntese e de "até 30% do carbono" com "pode"/"parte do carbono".
+- VALIDAR COM A FIXTEC: rizóbio — texto único de cobalto/molibdênio (Co/Mo via folha em V3–V5 com inoculação na semente;
+  no sulco, na semente ou via folha, nunca na calda) e a dose (1,2 milhão de células/semente; 2,5 a 3 doses no sulco;
+  feijão 50 g de turfoso para 10 kg). Fonte: Embrapa Soja, Circular Técnica 221.
+
+NOVIDADES DE INTERAÇÃO
+- Wiki, Bioinseticidas: o radar abre em "Quem ataca qual praga" (eixos = pragas; cada agente com sua cor) e mostra a
+  tabela praga-alvo × produto registrado. Tocar numa linha destaca o agente. O botão "Funções na planta" volta ao radar comum.
+  Os dados ficam em bioData.js, campo "alvos" do grupo bioinseticidas. O Bt está marcado "conferir".
+- Wiki, todos os grupos: área cinza no radar = o que os 9 grupos fazem juntos; grupos de uma função só ganham o selo "Especialista".
+- Aba Fatores: os 8 cartões abrem ao toque (por quê / o que fazer / fonte). A "Crise de Viabilidade" tem uma régua para
+  arrastar (células por semente × meta de 1,2 milhão). Os botões "Ver no simulador" levam ao simulador já com o cenário montado.

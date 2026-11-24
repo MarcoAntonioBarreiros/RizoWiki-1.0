@@ -70,7 +70,7 @@
   </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-950 text-slate-100 flex justify-center p-4">
   <div class="max-w-6xl w-full space-y-6">
     <!-- Cabeçalho -->
     <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -79,9 +79,8 @@
           Simulador de Viabilidade de Inoculantes
         </h1>
         <p class="text-sm text-slate-400 max-w-2xl">
-          Modelo conceitual com três faixas de cenário (ideal, intermediário e extremo),
-          alinhado à ideia de perda logarítmica de dose (10¹² → 10⁴).
-          Use para testar se a lógica de resposta está coerente com o storytelling dos painéis.
+          Mude o tempo de espera, a temperatura e a química e veja quantas bactérias continuam vivas.
+          Modelo ilustrativo para comparar cenários: os números não são previsão de campo.
         </p>
       </div>
       <div class="text-xs text-slate-400">
@@ -214,12 +213,13 @@
           <!-- Percentual grande -->
           <div class="flex flex-col items-start">
             <span class="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-1">
-              Sobrevivência estimada
+              Bactérias ainda vivas
             </span>
             <div class="flex items-baseline">
-              <span id="dosePercent" class="text-5xl font-bold text-slate-50">100</span>
-              <span class="ml-1 text-xl text-slate-400">%</span>
+              <span id="dosePercent" class="text-5xl font-bold text-slate-50">100%</span>
             </div>
+            <span id="doseDetalhe" class="text-xs text-slate-400 mt-1">da dose aplicada</span>
+            <span class="text-[10px] text-slate-500 mt-1 italic">modelo ilustrativo</span>
           </div>
         </div>
 
@@ -230,11 +230,11 @@
             Cenário ideal
           </div>
           <h2 id="title" class="text-xl font-semibold">
-            Dose preservada – janela segura
+            Janela segura – população acima do mínimo
           </h2>
           <p id="desc" class="text-sm text-slate-300">
-            Nas condições atuais, a maior parte da dose ainda está ativa.
-            O risco de queda logarítmica severa é baixo.
+            Mesmo com alguma perda, ainda restam bactérias vivas acima do mínimo do modelo.
+            Janela confortável para a operação.
           </p>
 
           <div class="grid md:grid-cols-2 gap-2 text-[11px] mt-3">
@@ -333,7 +333,7 @@
         logMax: 11,
         logMin: 4,
         quick: "Pigmentos rosa oferecem proteção UV natural. Resistência moderada a calor.",
-        manage: "Compatível com a maioria dos manejos, mas evite pH extremo no tanque."
+        manage: "Não misturar com produtos clorados nem usar água com mais de 2 ppm de cloro. pH da água de 5 a 8. Outras misturas: consultar o agrônomo (rótulo Utrisha N)."
       },
       pnsb: {
         name: "PNSB (Bactérias Púrpuras)",
@@ -449,9 +449,20 @@
       gaugeRing.style.strokeDasharray = String(circ);
       gaugeRing.style.strokeDashoffset = String(offset);
 
-      // Exibição: se ainda está na janela (≥ logMin), nunca mostrar menos que 1%
-      const displayPct = Math.max(1, Math.round(doseClamped));
-      dosePercent.textContent = displayPct;
+      // Exibição: fração REAL de células vivas no modelo = 10^(logN − logMax).
+      // (O anel continua mostrando a distância até o mínimo eficaz, logMin.)
+      const fracViva = Math.pow(10, logN - org.logMax);
+      let txtViva, txtDetalhe = "da dose aplicada";
+      if (fracViva >= 0.995) txtViva = "100%";
+      else if (fracViva >= 0.01) txtViva = Math.round(fracViva * 100) + "%";
+      else {
+        const umEm = Math.pow(10, Math.round(-Math.log10(fracViva)));
+        txtViva = "1 em " + umEm.toLocaleString("pt-BR");
+        txtDetalhe = "células da dose aplicada";
+      }
+      dosePercent.textContent = txtViva;
+      dosePercent.className = (txtViva.length > 5 ? "text-3xl" : "text-5xl") + " font-bold text-slate-50 whitespace-nowrap";
+      document.getElementById("doseDetalhe").textContent = txtDetalhe;
 
       // Cor e cenário
       let scenario, badgeText, badgeClasses, titleText, descText;
@@ -460,8 +471,8 @@
         gaugeRing.setAttribute("stroke", "#22c55e");
         badgeText = "Cenário ideal";
         badgeClasses = "bg-emerald-500/15 text-emerald-300 border border-emerald-500/40";
-        titleText = "Dose preservada – janela segura";
-        descText = "Perdas logarítmicas ainda pequenas. Janela de decisão confortável para a operação.";
+        titleText = "Janela segura – população acima do mínimo";
+        descText = "Mesmo com alguma perda, ainda restam bactérias vivas acima do mínimo do modelo. Janela confortável para a operação.";
       } else if (effStress < 0.7) {
         scenario = "moderado";
         gaugeRing.setAttribute("stroke", "#eab308");
@@ -549,6 +560,21 @@
       if (targetTemp < tempMin) targetTemp = tempMin;
       tempSlider.value = Math.round(targetTemp);
 
+      updateModel();
+    });
+
+    // Cenário pronto vindo dos cartões da aba Fatores (ex.: {time:24}, {temp:40}, {chem:3}, {organismKey:'brady'})
+    window.addEventListener("message", (event) => {
+      if (!event.data || typeof event.data !== "object" || event.data.type !== "cenario") return;
+      // Parte do cenário-base (sem espera, 25 °C, sem químico) e muda só o que o cartão pede
+      const c = Object.assign({ time: 0, temp: 25, chem: 0 }, event.data.payload || {});
+      if (c.organismKey && Array.from(organismSel.options).some(o => o.value === c.organismKey)) organismSel.value = c.organismKey;
+      if (typeof c.time === "number") timeSlider.value = c.time;
+      if (typeof c.temp === "number") tempSlider.value = c.temp;
+      if (typeof c.chem === "number") {
+        const btn = document.querySelector('.chemBtn[data-chem="' + c.chem + '"]');
+        if (btn) { btn.click(); return; }
+      }
       updateModel();
     });
 

@@ -97,7 +97,7 @@ window.solverData = [
         ],
         "protocolSummary": [
             "1. Escolher estirpes validadas para o tipo de solo (ácido vs alcalino).",
-            "2. Dose: 100-150mL/ha no sulco de plantio.",
+            "2. Dose: BiomaPhos 100 mL/ha na semente ou 150 mL/ha no sulco. Micorriza (Rootella BR): 120 g/ha. Pseudomonas: dose da bula de cada produto.",
             "3. Momento: Aplicar junto com o fertilizante fosfatado ou na semente.",
             "4. Compatibilidade: Variável. Bactérias (Bacillus/Pseudomonas) têm boa tolerância. No entanto, componentes fúngicos (Micorrizas) são sensíveis a muitos fungicidas (ex: triazóis, estrobilurinas); verificar tabelas.",
             "5. Avaliar: Análise foliar de P e desenvolvimento radicular."

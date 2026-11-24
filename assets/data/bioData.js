@@ -75,8 +75,8 @@ window.bioData = {
       }
     },
     "doseInfo": {
-      "range": "10⁹ Esporos/mL",
-      "justification": "Alta densidade celular para garantir germinação e competição com a microflora nativa.",
+      "range": "100–150 mL/ha",
+      "justification": "BiomaPhos: 100 mL/ha na semente ou 150 mL/ha no sulco. Semear em até 24 h depois de inocular. (Embrapa, Comunicado Técnico 252)",
       "critical": "A forma esporulada garante estabilidade, mas requer ativação em solo úmido."
     },
     "mechanisms": [
@@ -412,14 +412,14 @@ window.bioData = {
       ],
       "traducaoParaManejo": "É o 'saco de ureia biológico'. O nódulo é uma fábrica que troca nitrogênio do ar por açúcar da planta.",
       "compatibilidadePratica": {
-        "misturaTanque": "Sensível a metais tóxicos (ex: Cobre) e altas concentrações salinas. No entanto, a aplicação de Co e Mo (essenciais para FBN) em doses agronômicas é necessária e compatível se a inoculação for imediata.",
+        "misturaTanque": "Cobalto e molibdênio são essenciais para a fixação, mas na semente prejudicam o rizóbio. Com inoculação na semente, aplicar Co/Mo via folha em V3–V5. Com inoculação no sulco, Co/Mo na semente ou via folha, nunca na calda do inoculante.",
         "observacoesManejo": "Calor mata a bactéria. Semear imediatamente após inoculação."
       }
     },
     "doseInfo": {
-      "range": "10⁹ - 10¹⁰ UFC/mL",
-      "justification": "Dose massiva para garantir nodulação primária na raiz principal.",
-      "critical": "Compatibilidade com químicos é crítica. Morrem rapidamente com fungicidas e metais como Cobalto/Molibdênio em altas doses na semente (tóxicos por salinidade)."
+      "range": "1,2 milhão de células por semente",
+      "justification": "Soja: no mínimo 1,2 milhão de células por semente (uma dose por hectare na semente ou 2,5 a 3 doses no sulco). Feijão: 50 g de inoculante turfoso para 10 kg de semente. (Embrapa Soja, Circular Técnica 221)",
+      "critical": "Cobalto e molibdênio são essenciais para a fixação, mas na semente prejudicam o rizóbio. Com inoculação na semente, aplicar Co/Mo via folha em V3–V5. Com inoculação no sulco, Co/Mo na semente ou via folha, nunca na calda do inoculante."
     },
     "mechanisms": [
       {
@@ -550,10 +550,10 @@ window.bioData = {
       "temp": "25-37°C",
       "media": "Meio com Metanol",
       "ph": "6.0-8.0",
-      "conc": "10⁸ UFC/mL"
+      "conc": "3×10⁷ UFC/g (produto sólido)"
     },
     "app": {
-      "crops": "Soja, Milho, Café, Hortifruti",
+      "crops": "Milho",
       "soil": "Aplicação Foliar (Independente do solo)",
       "env": "Pleno Sol (Pigmento protege UV)",
       "method": "Pulverização Foliar"
@@ -561,7 +561,7 @@ window.bioData = {
     "extension": {
       "quandoFazMaisSentidoUsar": [
         "Previsão de veranicos ou altas temperaturas (estresse térmico).",
-        "Fases de crescimento rápido onde a planta produz muito metanol.",
+        "Milho de V4 a V8, com área foliar suficiente e plantas sadias.",
         "Quando se busca o efeito 'Stay-green' (manter folha verde)."
       ],
       "quandoGanhoTendeSerPequeno": [
@@ -576,13 +576,13 @@ window.bioData = {
       ],
       "traducaoParaManejo": "É o 'protetor solar' com vitaminas. Vive na folha, come metanol (toxina) e devolve nitrogênio.",
       "compatibilidadePratica": {
-        "misturaTanque": "Compatível com adubos foliares, evitar pH ácido ou cobre.",
-        "observacoesManejo": "Aplicar pela manhã para colonização dos estômatos."
+        "misturaTanque": "Não misturar com produtos clorados nem usar água com mais de 2 ppm de cloro. pH da água de 5 a 8. Outras misturas: consultar o agrônomo.",
+        "observacoesManejo": "Aplicar pela manhã. Usar logo após abrir a embalagem. Precisa de 1 h sem chuva depois da aplicação."
       }
     },
     "doseInfo": {
-      "range": "10⁸ UFC/mL",
-      "justification": "Dose ajustada para colonização rápida dos estômatos e superfície foliar.",
+      "range": "0,333 kg/ha",
+      "justification": "Utrisha N: 0,333 kg/ha em 100 a 250 L/ha de calda, via folha, de V4 a V8, nas primeiras horas do dia. (rótulo MAPA SP 005479-8.000003)",
       "critical": "A aplicação deve garantir cobertura foliar. Pigmentos rosas conferem proteção UV, mas a bactéria depende de tecido vivo."
     },
     "mechanisms": [
@@ -735,8 +735,7 @@ window.bioData = {
     "extension": {
       "quandoFazMaisSentidoUsar": [
         "Manejo de resistência (rotacionar químicos).",
-        "Controle de pragas em estágios iniciais.",
-        "Áreas próximas a sedes ou água (baixa toxicidade)."
+        "Controle de pragas em estágios iniciais."
       ],
       "quandoGanhoTendeSerPequeno": [
         "Infestações 'explosivas' com população adulta muito alta.",
@@ -860,6 +859,46 @@ window.bioData = {
       2,
       0
     ],
+    "alvos": {
+      "titulo": "Quem ataca qual praga",
+      "eixos": ["Lagartas", "Percevejos", "Cigarrinha-das-raízes", "Cigarrinha-do-milho", "Mosca-branca", "Ácaros", "Brocas"],
+      "nota": "Cada agente tem bula e alvo próprios: escolha pela praga, não pelo grupo. O espinosade (derivado de <em>Saccharopolyspora spinosa</em>) não entra no radar: conferir os alvos na bula.",
+      "agentes": [
+        {
+          "nome": "Beauveria bassiana IBCB 66",
+          "produtos": "Bovebio, Bassi Control",
+          "alvos": "Cigarrinha-do-milho (<em>Dalbulus maidis</em>), mosca-branca, ácaro-rajado, broca-do-café",
+          "valores": [0, 0, 0, 1, 1, 1, 1],
+          "cor": "#0ea5e9",
+          "fonte": "Bulas Bovebio e Bassi Control"
+        },
+        {
+          "nome": "Metarhizium anisopliae IBCB 425 ou E9",
+          "produtos": "Onmeta, Metamip; Metarril WP E9 (MAPA 6605)",
+          "alvos": "Cigarrinha-das-raízes da cana (<em>Mahanarva fimbriolata</em>)",
+          "valores": [0, 0, 1, 0, 0, 0, 0],
+          "cor": "#16a34a",
+          "fonte": "Bulas Onmeta e Metamip; Embrapa – Metarril WP E9"
+        },
+        {
+          "nome": "Chromobacterium subtsugae",
+          "produtos": "Cromobac / Chromotrix (MAPA 25725)",
+          "alvos": "Percevejo-marrom",
+          "valores": [0, 1, 0, 0, 0, 0, 0],
+          "cor": "#a855f7",
+          "fonte": "Registro MAPA 25725 (Agrolink)"
+        },
+        {
+          "nome": "Bacillus thuringiensis (Bt)",
+          "produtos": "Produto registrado para a lagarta-alvo",
+          "alvos": "Lagartas",
+          "valores": [1, 0, 0, 0, 0, 0, 0],
+          "cor": "#f59e0b",
+          "fonte": "Conferir na bula de cada produto",
+          "conferir": true
+        }
+      ]
+    },
     "evidencia": "em_revisao",
     "imagensV2": {
       "colonia": null,
@@ -916,7 +955,7 @@ window.bioData = {
     "extension": {
       "quandoFazMaisSentidoUsar": [
         "Solos frios ou úmidos onde Bacillus demora a arrancar.",
-        "Áreas com histórico de podridões radiculares (limpeza).",
+        "Áreas com histórico de podridões de raiz (como apoio ao manejo).",
         "Culturas de ciclo curto que exigem enraizamento explosivo."
       ],
       "quandoGanhoTendeSerPequeno": [
@@ -1095,7 +1134,7 @@ window.bioData = {
       "quandoGanhoTendeSerPequeno": [
         "Mistura com fungicidas químicos no tanque (morte dos esporos).",
         "Aplicação em solo seco e quente (dessecação).",
-        "Doenças foliares (ação restrita ao solo/raiz)."
+        "Doenças da parte aérea que não constem na bula do produto."
       ],
       "oQueObservarNaLavoura": [
         "Redução de 'reboleiras' de plantas mortas.",
@@ -1109,8 +1148,8 @@ window.bioData = {
       }
     },
     "doseInfo": {
-      "range": "10⁷ - 10⁹ Esporos/g",
-      "justification": "Alta carga de esporos para colonização agressiva.",
+      "range": "Conforme a formulação",
+      "justification": "Trichodermil SC 1306, mofo-branco na soja: 0,5 a 1,0 L/ha, via folha em V3 e V5. Trichodermil WP: 300 a 1000 g/ha; semente 150 a 300 g por 100 kg. Trichodermil FS: 600 mL por 100 kg de semente. (bulas Koppert/AGROFIT)",
       "critical": "Sensível a UV e seca. Cobrir o solo após aplicação."
     },
     "mechanisms": [
@@ -1278,8 +1317,8 @@ window.bioData = {
       }
     },
     "doseInfo": {
-      "range": "Propágulos infectivos",
-      "justification": "Inoculação garante colonização precoce.",
+      "range": "120 g/ha",
+      "justification": "Rootella BR: 120 g/ha na caixa da semeadora (culturas de grãos) ou no recobrimento de sementes (feijão, amendoim, arroz). Garantia: 20.800 propágulos/g.",
       "critical": "Fungicidas sistêmicos podem abortar a simbiose."
     },
     "mechanisms": [

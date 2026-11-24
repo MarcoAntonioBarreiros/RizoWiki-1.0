@@ -229,7 +229,7 @@ const data = [{
   details: {
     concept: "Unidade Evolutiva (Hologenoma)",
     mechanism: "A planta não evolui sozinha. O genoma vegetal + metagenoma microbiano co-evoluem. Inclui a distinção entre ePGPR (extracelulares) e iPGPR (endofíticas).",
-    molecular: "Rizodeposição & Exsudados: A planta investe até 30% do carbono fixado para criar um 'efeito rizosférico', secretando açúcares e flavonoides que recrutam o microbioma específico.",
+    molecular: "Rizodeposição & Exsudados: A planta libera pelas raízes parte do carbono que fixa, secretando açúcares e flavonoides que alimentam e recrutam os micróbios do solo.",
     implication: "Mudar o foco de 'adubar a planta' para 'alimentar o holobionte'."
   }
 }, {

@@ -968,6 +968,80 @@
 
         .wiki-nav-ativo { outline:3px solid #0ea5e9; outline-offset:-3px; }
 
+        /* Radar: abas, selo especialista, silhueta e tabela de alvos */
+        .radar-abas { display:flex; flex-wrap:wrap; gap:.75rem; margin-bottom:1rem; }
+        .radar-aba { background:rgba(255,255,255,.06); color:#cbd5e1; border:2px solid rgba(255,255,255,.15); }
+        .radar-aba-ativa { background:#0ea5e9; color:#fff; border-color:#0ea5e9; }
+        html.light-mode .radar-aba { background:#fff; color:#334155; border-color:#cbd5e1; }
+        html.light-mode .radar-aba-ativa { background:#0ea5e9; color:#fff; border-color:#0ea5e9; }
+        .selo-especialista { display:inline-flex; align-items:center; gap:.6rem; margin:0 0 1rem; padding:.5rem 1rem; border-radius:999px; font-weight:700; font-size:1rem; background:rgba(14,165,233,.12); color:#7dd3fc; border:1px solid rgba(14,165,233,.45); }
+        html.light-mode .selo-especialista { background:#e0f2fe; color:#075985; border-color:#7dd3fc; }
+        .radar-legenda { display:flex; align-items:center; gap:.6rem; margin-top:.75rem; font-size:1rem; color:#94a3b8; }
+        html.light-mode .radar-legenda { color:#475569; }
+        .radar-amostra { width:22px; height:14px; border-radius:4px; background:rgba(148,163,184,.18); border:1px solid rgba(148,163,184,.5); flex-shrink:0; }
+        .tabela-alvos { width:100%; border-collapse:collapse; font-size:1.05rem; color:#e2e8f0; }
+        html.light-mode .tabela-alvos { color:#1e293b; }
+        .tabela-alvos th { text-align:left; padding:.8rem .7rem; font-size:.8rem; text-transform:uppercase; letter-spacing:.08em; color:#94a3b8; border-bottom:2px solid rgba(148,163,184,.35); }
+        .tabela-alvos td { padding:.9rem .7rem; border-bottom:1px solid rgba(148,163,184,.18); vertical-align:top; }
+        .tabela-alvos tbody tr { cursor:pointer; transition:background .2s; }
+        .tabela-alvos tbody tr:active, .alvo-linha-ativa { background:rgba(14,165,233,.14); }
+        .ta-agente { font-weight:700; white-space:nowrap; }
+        .ta-fonte { font-size:.85rem; color:#94a3b8; }
+        html.light-mode .ta-fonte { color:#475569; }
+        .ta-conferir { display:inline-block; margin-left:.3rem; padding:.05rem .45rem; border-radius:6px; font-size:.72rem; font-weight:700; background:rgba(245,158,11,.18); color:#fbbf24; }
+        html.modo-tela .tabela-alvos { font-size:1.12rem; }
+        html.modo-tela .ta-agente { white-space:normal; min-width:14rem; }
+        html.modo-tela .selo-especialista, html.modo-tela .radar-legenda { font-size:1.2rem; }
+        @media (max-width: 900px) { .ta-agente { white-space:normal; } }
+
+        /* Aba Fatores: cartões tocáveis */
+        .fc-dica { color:#7dd3fc; font-weight:600; font-size:1.05rem; }
+        html.light-mode .fc-dica { color:#0369a1; }
+        .fc-card { position:relative; cursor:pointer; user-select:none; transition:border-color .2s, background .2s, transform .1s; }
+        .fc-card:not(.fc-grande) { background:rgba(255,255,255,.05); padding:1.5rem; border-radius:1rem; border:1px solid rgba(255,255,255,.1); }
+        .fc-card:not(.fc-grande):hover, .fc-card.fc-aberto:not(.fc-grande) { border-color:var(--fc-cor, #0ea5e9); }
+        .fc-card:active { transform:scale(.99); }
+        .fc-card:focus-visible { outline:3px solid #0ea5e9; outline-offset:3px; }
+        .fc-grande { padding:2.5rem; border-radius:2rem; }
+        .fc-titulo { color:#fff; font-weight:700; font-size:1.25rem; margin-bottom:.5rem; }
+        .fc-resumo { color:#cbd5e1; font-size:1.05rem; line-height:1.5; }
+        .fc-mais { display:inline-flex; align-items:center; gap:.5rem; margin-top:1rem; font-weight:700; font-size:.95rem; color:#7dd3fc; }
+        .fc-mais i { transition:transform .25s; }
+        .fc-aberto .fc-mais i { transform:rotate(180deg); }
+        .fc-corpo { max-height:0; overflow:hidden; opacity:0; transition:max-height .35s ease, opacity .3s ease, margin .3s; }
+        .fc-aberto .fc-corpo { max-height:1200px; opacity:1; margin-top:1rem; }
+        .fc-corpo p { color:#e2e8f0; font-size:1.05rem; line-height:1.6; margin-bottom:.75rem; }
+        .fc-corpo strong { color:#fff; }
+        .fc-fonte { font-size:.85rem !important; color:#94a3b8 !important; font-style:italic; border-left:2px solid rgba(148,163,184,.35); padding-left:.75rem; }
+        .fc-sim { margin-top:.5rem; }
+        #fatores-simulador-titulo { scroll-margin-top:120px; }
+        html.light-mode .fc-card:not(.fc-grande) { background:#fff; border-color:#cbd5e1; }
+        html.light-mode .fc-titulo, html.light-mode .fc-corpo strong { color:#0f172a; }
+        html.light-mode .fc-resumo, html.light-mode .fc-corpo p { color:#334155; }
+        html.light-mode .fc-fonte { color:#475569 !important; }
+        html.light-mode .fc-mais { color:#0369a1; }
+        html.modo-tela .fc-resumo, html.modo-tela .fc-corpo p { font-size:1.25rem; }
+        html.modo-tela .fc-titulo { font-size:1.5rem; }
+
+        /* Régua da Crise de Viabilidade */
+        .fc-viab { position:relative; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.08); border-radius:1rem; padding:1.25rem 1.25rem 1rem; cursor:default; }
+        html.light-mode .fc-viab { background:#f1f5f9; border-color:#cbd5e1; }
+        .fc-viab-trilho { position:relative; margin-top:2.4rem; margin-bottom:.5rem; }
+        .fc-viab input[type=range] { -webkit-appearance:none; appearance:none; width:100%; height:16px; border-radius:999px; cursor:pointer; outline:none;
+            background:linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #f59e0b calc(var(--fc-meta, 73) * 1%), #22c55e calc(var(--fc-meta, 73) * 1%), #22c55e 100%); }
+        .fc-viab input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:40px; height:40px; border-radius:50%; background:#fff; border:4px solid #0f172a; box-shadow:0 2px 10px rgba(0,0,0,.45); }
+        .fc-viab input[type=range]::-moz-range-thumb { width:34px; height:34px; border-radius:50%; background:#fff; border:4px solid #0f172a; }
+        .fc-viab-escala { display:flex; justify-content:space-between; font-size:.8rem; color:#94a3b8; font-family:monospace; }
+        .fc-viab-meta { position:absolute; top:-10px; bottom:-10px; left:calc(20px + (100% - 40px) * var(--fc-meta, 73) / 100); border-left:3px dashed #16a34a; pointer-events:none; }
+        .fc-viab-meta span { position:absolute; bottom:calc(100% + 2px); left:0; transform:translateX(-50%); font-size:.8rem; font-weight:700; color:#16a34a; white-space:nowrap; }
+        .fc-viab-msg { margin-top:.75rem; font-size:1.05rem; font-weight:600; color:#86efac; min-height:3em; }
+        .fc-viab[data-estado=atencao] .fc-viab-msg { color:#fcd34d; }
+        .fc-viab[data-estado=ruim] .fc-viab-msg { color:#fca5a5; }
+        html.light-mode .fc-viab-msg { color:#15803d; }
+        html.light-mode .fc-viab[data-estado=atencao] .fc-viab-msg { color:#b45309; }
+        html.light-mode .fc-viab[data-estado=ruim] .fc-viab-msg { color:#b91c1c; }
+        html.light-mode #fc-viab-valor { color:#0f172a; }
+
         /* Matriz "Quem faz o quê" */
         #matriz-funcoes { position:fixed; inset:0; z-index:90; background:rgba(2,6,23,.85); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:2rem; }
         #matriz-funcoes.aberto { display:flex; }
@@ -1470,94 +1544,127 @@
     <section id="view-factors" class="view-section bg-bio-dark">
         <div class="container mx-auto px-4 md:px-6">
             <h2 class="font-display text-4xl md:text-5xl text-white font-bold mb-6">Fatores Críticos</h2>
-            <p class="text-xl text-gray-400 mb-12 max-w-4xl">Variáveis ocultas e Boas Práticas de Aplicação.</p>
+            <p class="text-xl text-gray-400 mb-4 max-w-4xl">Variáveis que decidem se o inoculante funciona.</p>
+            <p class="fc-dica mb-12"><i class="fas fa-hand-pointer mr-2"></i> Toque em um cartão para ver o porquê, o que fazer e a fonte.</p>
 
             <div class="mb-16">
                 <h4 class="text-bio-leaf font-bold uppercase tracking-widest text-sm mb-6"><i
                         class="fas fa-check-circle mr-2"></i> Guia de Boas Práticas</h4>
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div
-                        class="bg-white/5 p-6 rounded-2xl border border-white/10 hover:border-bio-leaf/50 transition-all">
-                        <i class="fas fa-tint text-3xl text-bio-accent mb-4"></i>
-                        <h5 class="text-white font-bold mb-2">Umidade</h5>
-                        <p class="text-gray-400 text-sm">Água é o veículo da vida. Aplique sempre em solo úmido.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
+
+                    <div class="fc-card" role="button" tabindex="0" aria-expanded="false" onclick="abrirCartaoFator(this, event)" style="--fc-cor:#38bdf8">
+                        <i class="fas fa-tint text-3xl mb-4" style="color:var(--fc-cor)"></i>
+                        <h5 class="fc-titulo">Umidade</h5>
+                        <p class="fc-resumo">Inoculante de semente ou sulco: não semeie no pó (solo seco).</p>
+                        <span class="fc-mais">Saber mais <i class="fas fa-chevron-down"></i></span>
+                        <div class="fc-corpo">
+                            <p><strong>Por quê:</strong> as bactérias do inoculante precisam da umidade do solo para continuar vivas até a raiz crescer e encontrá-las.</p>
+                            <p><strong>O que fazer:</strong> semeie com o solo úmido e no mesmo dia da inoculação (no máximo 24 h depois).</p>
+                            <p><strong>Atenção:</strong> produtos de folha (como Utrisha N e Trichodermil SC) seguem a bula do produto, não esta regra.</p>
+                            <p class="fc-fonte">Fonte: Embrapa Soja, Circular Técnica 221; Embrapa, Boas práticas de inoculação em soja.</p>
+                            <button class="btn-toque btn-comparar fc-sim" onclick="verNoSimulador({time:24}, event)"><i class="fas fa-flask mr-2"></i> Ver no simulador: 24 h de espera</button>
+                        </div>
                     </div>
-                    <div
-                        class="bg-white/5 p-6 rounded-2xl border border-white/10 hover:border-bio-soil/50 transition-all">
-                        <i class="fas fa-sun text-3xl text-bio-soil mb-4"></i>
-                        <h5 class="text-white font-bold mb-2">Sombra</h5>
-                        <p class="text-gray-400 text-sm">UV mata bactérias em >20min. Proteja da luz direta e calor.</p>
+
+                    <div class="fc-card" role="button" tabindex="0" aria-expanded="false" onclick="abrirCartaoFator(this, event)" style="--fc-cor:#f59e0b">
+                        <i class="fas fa-sun text-3xl mb-4" style="color:var(--fc-cor)"></i>
+                        <h5 class="fc-titulo">Sombra</h5>
+                        <p class="fc-resumo">Sol e calor matam as bactérias.</p>
+                        <span class="fc-mais">Saber mais <i class="fas fa-chevron-down"></i></span>
+                        <div class="fc-corpo">
+                            <p><strong>Por quê:</strong> a luz direta e o calor reduzem o número de bactérias vivas na semente antes do plantio.</p>
+                            <p><strong>O que fazer:</strong> trate as sementes à sombra e semeie no mesmo dia. Não deixe semente inoculada exposta ao sol.</p>
+                            <p class="fc-fonte">Fonte: Embrapa, Boas práticas de inoculação em soja; Embrapa, Circular Técnica 190.</p>
+                            <button class="btn-toque btn-comparar fc-sim" onclick="verNoSimulador({temp:40}, event)"><i class="fas fa-flask mr-2"></i> Ver no simulador: 40 °C</button>
+                        </div>
                     </div>
-                    <div
-                        class="bg-white/5 p-6 rounded-2xl border border-white/10 hover:border-bio-red/50 transition-all">
-                        <i class="fas fa-flask text-3xl text-bio-red mb-4"></i>
-                        <h5 class="text-white font-bold mb-2">Químicos</h5>
-                        <p class="text-gray-400 text-sm">Fungicidas e alta salinidade são letais. Evite mistura direta.
-                        </p>
+
+                    <div class="fc-card" role="button" tabindex="0" aria-expanded="false" onclick="abrirCartaoFator(this, event)" style="--fc-cor:#ef4444">
+                        <i class="fas fa-flask text-3xl mb-4" style="color:var(--fc-cor)"></i>
+                        <h5 class="fc-titulo">Químicos</h5>
+                        <p class="fc-resumo">Fungicidas e sais podem matar o inoculante.</p>
+                        <span class="fc-mais">Saber mais <i class="fas fa-chevron-down"></i></span>
+                        <div class="fc-corpo">
+                            <p><strong>Por quê:</strong> o inoculante é feito de organismos vivos. Alguns produtos da calda ou do tratamento de sementes matam parte deles.</p>
+                            <p><strong>O que fazer:</strong> siga a tabela de compatibilidade da bula. Na semente tratada com fungicida, o inoculante entra por último e a semeadura é no mesmo dia; na soja, use pelo menos 2,5 milhões de células por semente.</p>
+                            <p class="fc-fonte">Fonte: bula de cada produto; Embrapa, Boas práticas de inoculação em soja.</p>
+                            <button class="btn-toque btn-comparar fc-sim" onclick="verNoSimulador({chem:3}, event)"><i class="fas fa-flask mr-2"></i> Ver no simulador: química forte</button>
+                        </div>
                     </div>
-                    <div
-                        class="bg-white/5 p-6 rounded-2xl border border-white/10 hover:border-bio-purple/50 transition-all">
-                        <i class="fas fa-thermometer-half text-3xl text-bio-purple mb-4"></i>
-                        <h5 class="text-white font-bold mb-2">Armazenamento</h5>
-                        <p class="text-gray-400 text-sm">Condições inadequadas comprometem a vida útil e eficácia.</p>
+
+                    <div class="fc-card" role="button" tabindex="0" aria-expanded="false" onclick="abrirCartaoFator(this, event)" style="--fc-cor:#a855f7">
+                        <i class="fas fa-thermometer-half text-3xl mb-4" style="color:var(--fc-cor)"></i>
+                        <h5 class="fc-titulo">Armazenamento</h5>
+                        <p class="fc-resumo">Guarde em local fresco, longe do sol.</p>
+                        <span class="fc-mais">Saber mais <i class="fas fa-chevron-down"></i></span>
+                        <div class="fc-corpo">
+                            <p><strong>Por quê:</strong> o inoculante é um produto vivo. Calor e tempo de prateleira reduzem as células viáveis.</p>
+                            <p><strong>O que fazer:</strong> respeite a temperatura de armazenamento e a validade indicadas na bula de cada produto.</p>
+                            <p class="fc-fonte">Fonte: bula de cada produto.</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <h4 class="text-gray-500 font-bold uppercase tracking-widest text-sm mb-6"><i
                     class="fas fa-search mr-2"></i> Variáveis Ocultas</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-12">
-                <div
-                    class="glass-panel p-10 rounded-[2rem] border-l-8 border-bio-purple hover:bg-[#151f32] transition-all">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-12 items-start">
+                <div class="fc-card fc-grande glass-panel border-l-8 border-bio-purple" role="button" tabindex="0" aria-expanded="false" onclick="abrirCartaoFator(this, event)">
                     <div class="flex items-center gap-5 mb-6">
                         <i class="fas fa-prescription-bottle text-bio-purple text-4xl"></i>
                         <h3 class="text-white font-bold text-2xl">O Paradoxo da Dose</h3>
                     </div>
                     <p class="text-gray-300 text-lg mb-8 leading-relaxed">
-                        Mais nem sempre é melhor. Inoculantes de soja exigem altas concentrações (10⁹ UFC) para vencer a
-                        microbiota nativa e ocupar os nódulos. Em contraste, PGPRs associativos (como Azospirillum)
-                        podem atingir saturação ou até supressão em doses excessivas, devido à competição por exsudatos
-                        ou desbalanço hormonal na rizosfera.
+                        Mais nem sempre é melhor. Na soja, há uma dose mínima por semente. No Azospirillum, aumentar a
+                        dose não aumenta o ganho e pode atrapalhar.
                     </p>
-                    <div class="flex justify-between bg-black/40 p-6 rounded-2xl border border-white/5">
+                    <div class="flex justify-between gap-4 bg-black/40 p-6 rounded-2xl border border-white/5">
                         <div class="text-center">
-                            <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Soja (Nodulação)</div>
-                            <div class="text-bio-leaf font-bold text-3xl font-mono">10<sup>9</sup></div>
+                            <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Soja (rizóbio)</div>
+                            <div class="text-bio-leaf font-bold text-2xl">1,2 milhão<br><span class="text-base font-normal text-gray-400">células por semente, no mínimo</span></div>
                         </div>
                         <div class="text-gray-600 font-bold text-xl self-center">vs</div>
                         <div class="text-center">
-                            <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Associativos (Hormônios)
-                            </div>
-                            <div class="text-bio-purple font-bold text-3xl font-mono">Saturação</div>
+                            <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Azospirillum</div>
+                            <div class="text-bio-purple font-bold text-2xl">Dose da bula<br><span class="text-base font-normal text-gray-400">mais não é melhor</span></div>
                         </div>
+                    </div>
+                    <span class="fc-mais mt-6">Saber mais <i class="fas fa-chevron-down"></i></span>
+                    <div class="fc-corpo">
+                        <p><strong>Por quê:</strong> o rizóbio do produto precisa chegar à raiz em número suficiente para formar os nódulos antes dos rizóbios que já estão no solo. Já o Azospirillum age por hormônios de crescimento: em excesso, o efeito pode se inverter.</p>
+                        <p><strong>O que fazer:</strong> na soja, garanta a dose mínima por semente. No Azospirillum, use a dose da bula, sem aumentar.</p>
+                        <p class="fc-fonte">Fonte: Embrapa, Boas práticas de inoculação em soja; Embrapa, Circular Técnica 212; Hungria, Nogueira &amp; Araujo (2013), Biology and Fertility of Soils 49:791–801.</p>
                     </div>
                 </div>
 
-                <div
-                    class="glass-panel p-10 rounded-[2rem] border-l-8 border-bio-soil hover:bg-[#151f32] transition-all">
+                <div class="fc-card fc-grande glass-panel border-l-8 border-bio-soil" role="button" tabindex="0" aria-expanded="false" onclick="abrirCartaoFator(this, event)">
                     <div class="flex items-center gap-5 mb-6">
                         <i class="fas fa-map-marker-alt text-bio-soil text-4xl"></i>
                         <h3 class="text-white font-bold text-2xl">Efeito "Terroir"</h3>
                     </div>
                     <p class="text-gray-300 text-lg mb-8 leading-relaxed">
-                        A mesma co-inoculação (B119 + B2084) teve resultados díspares em locais com tipos de solo
-                        diferentes, provando a influência da fertilidade nativa.
+                        No milho, a mesma coinoculação (B119 + B2084) deu +24% num local e +11% no outro: o solo e o
+                        clima mudam a resposta.
                     </p>
-                    <div class="grid grid-cols-2 gap-6" data-verificar="true">
+                    <div class="grid grid-cols-2 gap-6">
                         <div class="bg-black/40 p-5 rounded-2xl border-b-4 border-bio-leaf">
-                            <div class="text-xs text-gray-500 uppercase mb-1">Sete Lagoas</div>
+                            <div class="text-xs text-gray-500 uppercase mb-1">Sete Lagoas (MG)</div>
                             <div class="text-3xl font-bold text-white">+24%</div>
                         </div>
                         <div class="bg-black/40 p-5 rounded-2xl border-b-4 border-gray-600 opacity-60">
-                            <div class="text-xs text-gray-500 uppercase mb-1">Sto. Antônio</div>
+                            <div class="text-xs text-gray-500 uppercase mb-1">Santo Antônio de Goiás (GO)</div>
                             <div class="text-3xl font-bold text-white">+11%</div>
                         </div>
                     </div>
-                    <p class="ref-text text-xs text-gray-500 italic mt-4">Oliveira-Paiva et al. (2024). Frontiers in Microbiology 15:1426166.</p>
+                    <span class="fc-mais mt-6">Saber mais <i class="fas fa-chevron-down"></i></span>
+                    <div class="fc-corpo">
+                        <p><strong>Os números:</strong> produtividade média de duas safras, comparada com a mesma adubação sem inoculante. Sete Lagoas: 8.593 × 6.952 kg/ha. Santo Antônio de Goiás: 9.622 × 8.692 kg/ha.</p>
+                        <p><strong>O que isso ensina:</strong> o mesmo produto rende diferente em cada lugar. Resultado de outra região é uma pista, não uma garantia: vale testar numa faixa da própria lavoura.</p>
+                        <p class="fc-fonte">Fonte: Oliveira-Paiva et al. (2024), Frontiers in Microbiology 15:1426166, Tabela 4, com a correção publicada em 2026 (Frontiers in Microbiology 17:1850844).</p>
+                    </div>
                 </div>
 
-                <div
-                    class="glass-panel p-10 rounded-[2rem] border-l-8 border-bio-gold hover:bg-[#151f32] transition-all">
+                <div class="fc-card fc-grande glass-panel border-l-8 border-bio-gold" role="button" tabindex="0" aria-expanded="false" onclick="abrirCartaoFator(this, event)">
                     <div class="flex items-center gap-5 mb-6">
                         <i class="fas fa-dna text-bio-gold text-4xl"></i>
                         <h3 class="text-white font-bold text-2xl">Milho "Sierra Mixe"</h3>
@@ -1569,33 +1676,51 @@
                     <div class="space-y-3 text-gray-400">
                         <div class="flex items-center gap-3"><i class="fas fa-check text-bio-gold"></i> Fixação de N
                             atmosférico</div>
-                        <div class="flex items-center gap-3"><i class="fas fa-check text-bio-gold"></i> 500+ bactérias
-                            isoladas</div>
+                        <div class="flex items-center gap-3"><i class="fas fa-check text-bio-gold"></i> A fixação supriu
+                            de 29% a 82% do N da planta</div>
+                    </div>
+                    <span class="fc-mais mt-6">Saber mais <i class="fas fa-chevron-down"></i></span>
+                    <div class="fc-corpo">
+                        <p><strong>Por que importa:</strong> mostra que um cereal também pode receber boa parte do nitrogênio de bactérias, como a soja recebe do rizóbio. É resultado de pesquisa com uma variedade tradicional, não um produto à venda.</p>
+                        <p class="fc-fonte">Fonte: Van Deynze et al. (2018), PLoS Biology 16:e2006352.</p>
                     </div>
                 </div>
 
-                <div
-                    class="glass-panel p-10 rounded-[2rem] border-l-8 border-bio-red hover:bg-[#151f32] transition-all">
+                <div class="fc-card fc-grande glass-panel border-l-8 border-bio-red" role="button" tabindex="0" aria-expanded="false" onclick="abrirCartaoFator(this, event)">
                     <div class="flex items-center gap-5 mb-6">
                         <i class="fas fa-exclamation-triangle text-bio-red text-4xl"></i>
                         <h3 class="text-white font-bold text-2xl">Crise de Viabilidade</h3>
                     </div>
                     <p class="text-gray-300 text-lg mb-6 leading-relaxed">
-                        Na indústria, formulações líquidas de inoculantes costumam trabalhar na faixa de 10⁹–10¹⁰
-                        UFC/mL. Na semente ou no sulco, o objetivo é manter pelo menos 10⁶ UFC viáveis para garantir
-                        nodulação ou colonização eficiente.
+                        O produto sai da fábrica com bilhões de células por mL. Na soja, a meta é que pelo menos 1,2
+                        milhão de células cheguem vivas a cada semente.
                     </p>
-                    <div class="w-full bg-gray-800 h-4 rounded-full mt-8 mb-2 relative overflow-hidden">
-                        <div class="absolute h-full bg-bio-leaf w-full"></div>
-                        <div class="absolute h-full bg-bio-red w-[10%] shadow-[0_0_20px_rgba(239,68,68,0.8)] z-10">
+                    <div class="fc-viab" onclick="event.stopPropagation()">
+                        <label for="fc-viab-slider" class="text-sm text-gray-400 font-bold uppercase tracking-widest">Arraste: quantas células chegaram vivas à semente?</label>
+                        <div class="fc-viab-trilho">
+                            <input id="fc-viab-slider" type="range" min="4" max="7" step="0.05" value="6.5" oninput="atualizarViabilidade()" aria-describedby="fc-viab-msg">
+                            <div class="fc-viab-meta" aria-hidden="true"><span>meta: 1,2 milhão</span></div>
                         </div>
+                        <div class="fc-viab-escala"><span>10 mil</span><span>100 mil</span><span>1 milhão</span><span>10 milhões</span></div>
+                        <div class="flex items-baseline gap-3 mt-4">
+                            <span id="fc-viab-valor" class="text-3xl font-bold text-white">3,2 milhões</span>
+                            <span class="text-gray-400">células por semente</span>
+                        </div>
+                        <p id="fc-viab-msg" class="fc-viab-msg"></p>
                     </div>
-                    <div class="flex justify-between text-xs font-mono font-bold tracking-widest">
-                        <span class="text-xs font-bold text-emerald-600">Indústria: 10¹⁰</span>
-                        <span class="text-xs font-bold text-red-500">Campo: 10⁶</span>
+                    <span class="fc-mais mt-6">Saber mais <i class="fas fa-chevron-down"></i></span>
+                    <div class="fc-corpo">
+                        <p><strong>Por quê:</strong> é o número que garante que o rizóbio do produto chegue à raiz antes dos que já estão no solo. Sol, calor, tempo até o plantio e produtos químicos na semente derrubam essa conta.</p>
+                        <p><strong>Semente tratada com fungicida:</strong> use pelo menos 2,5 milhões de células por semente e semeie no mesmo dia.</p>
+                        <p class="fc-fonte">Fonte: Embrapa, Boas práticas de inoculação em soja; Embrapa, Circular Técnica 190.</p>
+                        <button class="btn-toque btn-comparar fc-sim" onclick="verNoSimulador({organismKey:'brady'}, event)"><i class="fas fa-flask mr-2"></i> Testar perdas no simulador</button>
                     </div>
                 </div>
             </div>
+
+            <h4 id="fatores-simulador-titulo" class="text-gray-500 font-bold uppercase tracking-widest text-sm mb-4"><i
+                    class="fas fa-flask mr-2"></i> Simulador: tempo, temperatura e química</h4>
+            <div id="simulador-fatores-container" class="mt-2 w-full mb-12"></div>
         </div>
 
         <!-- FIM DA CRITICAL SECTION -->
@@ -1698,7 +1823,6 @@
                     </div>
                 </div>
             </div>
-            <div id="simulador-fatores-container" class="mt-2 w-full"></div>
         </div>
     </section>
     <script src="assets/data/bioData.js"></script>
@@ -1924,15 +2048,15 @@
                 id: 'leaves',
                 title: 'Expansão Foliar',
                 type: 'Efeito Indireto',
-                desc: 'Um sistema radicular robusto e bem nutrido sustenta uma maior parte aérea. A planta mantém turgidez e estômatos abertos por mais tempo, permitindo maior captura de CO₂.',
-                impact: 'Folhas mais verdes (Clorofila) e maior área para fotossíntese.',
+                desc: 'Uma raiz mais forte e bem nutrida pode sustentar uma parte aérea maior. Quando a água e os nutrientes deixam de ser o limite, a planta pode manter os estômatos abertos por mais tempo.',
+                impact: 'Pode deixar as folhas mais verdes quando a nutrição era o limite.',
                 icon: 'wind', top: '30%', left: '50%', color: 'text-bio-leaf', border: 'border-bio-leaf', shadow: 'shadow-green-500/50', bg: 'bg-bio-leaf/10', borderCol: 'border-bio-leaf'
             },
             {
                 id: 'photosynthesis',
                 title: 'Fotossíntese e Biomassa',
                 type: 'Resultado Integrado',
-                desc: 'A soma de melhor nutrição (N, P, K), hormônios e sanidade resulta em alta taxa fotossintética líquida. O carbono fixado é convertido em biomassa (grãos, frutos e fibras).',
+                desc: 'Quando nutrição, hormônios e sanidade melhoram, a planta tende a fotossintetizar mais. O carbono fixado vira biomassa (grãos, frutos e fibras).',
                 impact: 'Aumento direto na produtividade (kg/ha) e qualidade da colheita.',
                 icon: 'sun', top: '10%', left: '20%', color: 'text-bio-gold', border: 'border-bio-gold', shadow: 'shadow-yellow-500/50', bg: 'bg-bio-gold/10', borderCol: 'border-bio-gold'
             }
@@ -1977,7 +2101,7 @@
                 manTitle: 'Manejo – Sanidade foliar',
                 manText: 'Programas integrados de controle de pragas e doenças preservam área foliar e potencializam o ganho de biomassa promovido pelos inoculantes.',
                 mecTitle: 'Mecanismos – Área foliar & turgor',
-                mecText: 'Melhor nutrição e equilíbrio hormonal mantêm estômatos funcionais e folhas túrgidas, prolongando a fotossíntese ativa.'
+                mecText: 'Melhor nutrição e equilíbrio hormonal podem manter as folhas ativas por mais tempo. O efeito medido em campo é na produtividade (ex.: +24% de milho com BiomaPhos em Sete Lagoas).'
             },
             photosynthesis: {
                 ambTitle: 'Ambiente – Sistema de produção',
@@ -1985,7 +2109,7 @@
                 manTitle: 'Manejo – Integração com adubação',
                 manText: 'Inoculantes potencializam, mas não substituem o manejo básico. Ajuste de calagem, adubação e rotação de culturas é essencial.',
                 mecTitle: 'Mecanismos – Conversão em biomassa',
-                mecText: 'A soma de FBN, solubilização de nutrientes, hormônios e biocontrole resulta em maior taxa fotossintética líquida e acúmulo de grãos, fibras ou frutos.'
+                mecText: 'FBN, solubilização de nutrientes, hormônios e biocontrole podem somar para mais fotossíntese e mais grãos, fibras ou frutos, quando esses fatores eram o limite.'
             }
         };
 
@@ -2522,6 +2646,47 @@
             desenharGraficoFuncoes();
         }
 
+        // Selo "Especialista": grupo com uma única função no radar.
+        function htmlSeloEspecialista(d) {
+            const f = d.funcoes || [];
+            const ativos = f.map((v, i) => v > 0 ? i : -1).filter(i => i >= 0);
+            if (ativos.length !== 1) return '';
+            const nome = FUNCOES_LABELS_LONGOS[ativos[0]].toLowerCase();
+            return `<p class="selo-especialista"><i class="fas fa-crosshairs"></i> Especialista: o grupo se concentra em uma função — ${nome}.</p>`;
+        }
+
+        // Tabela "praga-alvo × produto registrado" (dados em bioData[k].alvos)
+        function htmlTabelaAlvos(d) {
+            const a = d.alvos;
+            return `
+                <div id="radar-tabela-alvos" class="mt-6">
+                    <table class="tabela-alvos">
+                        <thead><tr><th>Agente</th><th>Praga-alvo</th><th>Produto registrado</th><th>Fonte</th></tr></thead>
+                        <tbody>
+                            ${a.agentes.map((ag, i) => `
+                            <tr id="alvo-linha-${i}" onclick="destacarAgente(${i})">
+                                <td class="ta-agente"><span class="mz-cor" style="background:${ag.cor}"></span><em>${ag.nome}</em></td>
+                                <td>${ag.alvos}</td>
+                                <td>${ag.produtos}</td>
+                                <td class="ta-fonte">${ag.fonte}${ag.conferir ? ' <span class="ta-conferir">conferir</span>' : ''}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    <p class="text-gray-300 text-base mt-4 leading-relaxed"><i class="fas fa-hand-pointer mr-2" style="color:${d.colors.main}"></i>Toque numa linha para destacar o agente no radar. ${a.nota}</p>
+                </div>`;
+        }
+
+        function setRadarModo(modo) {
+            window.wikiRadarModo = modo;
+            window.wikiAgenteDestaque = null;
+            desenharGraficoFuncoes();
+        }
+
+        function destacarAgente(i) {
+            window.wikiAgenteDestaque = window.wikiAgenteDestaque === i ? null : i;
+            desenharGraficoFuncoes();
+        }
+
         function desenharGraficoFuncoes() {
             const key = window.currentWikiKey;
             const d = bioData[key];
@@ -2533,50 +2698,107 @@
             const telaGrande = document.documentElement.classList.contains('modo-tela');
             const textColor = isLight ? '#0f172a' : '#e2e8f0';
             const gridColor = isLight ? 'rgba(15,23,42,0.18)' : 'rgba(255,255,255,0.18)';
+            const modoAlvos = !!(d.alvos && window.wikiRadarModo === 'alvos');
 
-            const datasets = [{
-                label: d.name,
-                data: d.funcoes,
-                backgroundColor: `${d.colors.hex}55`,
-                borderColor: d.colors.hex,
-                borderWidth: 3,
-                pointBackgroundColor: d.colors.hex,
-                pointRadius: 6
-            }];
-            const c = window.wikiCompareKey && bioData[window.wikiCompareKey];
-            if (c && window.wikiCompareKey !== key) {
-                datasets.push({
-                    label: c.name,
-                    data: c.funcoes,
-                    backgroundColor: `${c.colors.hex}33`,
-                    borderColor: c.colors.hex,
-                    borderWidth: 3,
-                    borderDash: [8, 6],
-                    pointBackgroundColor: c.colors.hex,
-                    pointRadius: 6
+            // Mostra/esconde as peças de cada modo
+            const vis = (id, on) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', !on); };
+            vis('radar-tabela-alvos', modoAlvos);
+            vis('radar-legenda-cinza', !modoAlvos);
+            vis('radar-nota-funcoes', !modoAlvos);
+            vis('radar-botoes-funcoes', !modoAlvos);
+            if (modoAlvos) vis('comparar-lista', false);
+            const abaA = document.getElementById('radar-aba-alvos'), abaF = document.getElementById('radar-aba-funcoes');
+            if (abaA) abaA.classList.toggle('radar-aba-ativa', modoAlvos);
+            if (abaF) abaF.classList.toggle('radar-aba-ativa', !modoAlvos);
+            document.querySelectorAll('[id^="alvo-linha-"]').forEach((tr, i) => tr.classList.toggle('alvo-linha-ativa', window.wikiAgenteDestaque === i));
+
+            let labels, datasets, rMax, tickCb, tipCb;
+            if (modoAlvos) {
+                labels = d.alvos.eixos;
+                const foco = window.wikiAgenteDestaque;
+                datasets = d.alvos.agentes.map((ag, i) => {
+                    const apagado = foco !== null && foco !== undefined && foco !== i;
+                    return {
+                        label: ag.nome,
+                        data: ag.valores,
+                        backgroundColor: ag.cor + (apagado ? '10' : '40'),
+                        borderColor: ag.cor + (apagado ? '40' : ''),
+                        borderWidth: apagado ? 1 : 3,
+                        pointBackgroundColor: ag.valores.map(v => v > 0 ? ag.cor + (apagado ? '40' : '') : 'transparent'),
+                        pointBorderColor: 'transparent',
+                        pointRadius: ag.valores.map(v => v > 0 ? (telaGrande ? 11 : 9) : 0),
+                        pointHoverRadius: ag.valores.map(v => v > 0 ? (telaGrande ? 13 : 11) : 0)
+                    };
                 });
+                rMax = 1;
+                tickCb = () => '';
+                tipCb = it => it.raw > 0 ? `${it.dataset.label}: registrado para ${it.label.toLowerCase()}` : null;
+            } else {
+                labels = FUNCOES_LABELS;
+                datasets = [{
+                    label: d.name,
+                    data: d.funcoes,
+                    backgroundColor: `${d.colors.hex}55`,
+                    borderColor: d.colors.hex,
+                    borderWidth: 3,
+                    pointBackgroundColor: d.colors.hex,
+                    pointRadius: d.funcoes.map(v => v > 0 ? 6 : 0)
+                }];
+                const c = window.wikiCompareKey && bioData[window.wikiCompareKey];
+                if (c && window.wikiCompareKey !== key) {
+                    datasets.push({
+                        label: c.name,
+                        data: c.funcoes,
+                        backgroundColor: `${c.colors.hex}33`,
+                        borderColor: c.colors.hex,
+                        borderWidth: 3,
+                        borderDash: [8, 6],
+                        pointBackgroundColor: c.colors.hex,
+                        pointRadius: c.funcoes.map(v => v > 0 ? 6 : 0)
+                    });
+                }
+                // Silhueta cinza: o máximo de cada função entre todos os grupos (o espaço vazio passa a ser lido como "ele não faz isso")
+                const todos = Object.values(bioData).filter(g => g.funcoes);
+                const silhueta = FUNCOES_LABELS.map((_, i) => Math.max(...todos.map(g => g.funcoes[i] || 0)));
+                datasets.push({
+                    label: '__silhueta',
+                    data: silhueta,
+                    backgroundColor: isLight ? 'rgba(100,116,139,0.10)' : 'rgba(148,163,184,0.10)',
+                    borderColor: isLight ? 'rgba(100,116,139,0.35)' : 'rgba(148,163,184,0.30)',
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    pointHoverRadius: 0
+                });
+                rMax = 2;
+                tickCb = v => v === 1 ? 'Secundária' : v === 2 ? 'Principal' : '';
+                tipCb = it => it.dataset.label === '__silhueta' ? null
+                    : `${it.dataset.label}: ${it.raw === 2 ? 'função principal' : it.raw === 1 ? 'função secundária' : 'não é função do grupo'}`;
             }
 
+            const visiveis = datasets.filter(ds => ds.label !== '__silhueta').length;
             currentWikiChart = new Chart(ctx, {
                 type: 'radar',
-                data: { labels: FUNCOES_LABELS, datasets },
+                data: { labels, datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     animation: { duration: 500 },
                     plugins: {
-                        legend: { display: datasets.length > 1, position: 'bottom', labels: { color: textColor, font: { size: telaGrande ? 20 : 16, weight: '600' }, padding: 20 } },
-                        tooltip: { callbacks: { label: (it) => `${it.dataset.label}: ${it.raw === 2 ? 'função principal' : it.raw === 1 ? 'função secundária' : 'não é função do grupo'}` } }
+                        legend: {
+                            display: visiveis > 1, position: 'bottom',
+                            labels: { color: textColor, font: { size: telaGrande ? 20 : 16, weight: '600' }, padding: 20, filter: it => it.text !== '__silhueta' }
+                        },
+                        tooltip: { filter: it => tipCb(it) !== null, callbacks: { label: tipCb } }
                     },
                     scales: {
                         r: {
-                            min: 0, max: 2,
+                            min: 0, max: rMax,
                             grid: { color: gridColor },
                             angleLines: { color: gridColor },
                             pointLabels: { color: textColor, font: { size: telaGrande ? 22 : 18, weight: '700' } },
                             ticks: {
                                 stepSize: 1, color: isLight ? '#475569' : '#94a3b8', backdropColor: 'transparent',
                                 font: { size: telaGrande ? 15 : 13 },
-                                callback: v => v === 1 ? 'Secundária' : v === 2 ? 'Principal' : ''
+                                callback: tickCb
                             }
                         }
                     }
@@ -2630,7 +2852,12 @@
             const d = bioData[key];
             const content = document.getElementById('wiki-content');
             if (!content || !d) return;
-            if (window.currentWikiKey !== key) window.wikiCompareKey = null;
+            if (window.currentWikiKey !== key) {
+                window.wikiCompareKey = null;
+                window.wikiRadarModo = d.alvos ? 'alvos' : 'funcoes';
+                window.wikiAgenteDestaque = null;
+            }
+            if (!d.alvos) window.wikiRadarModo = 'funcoes';
             window.currentWikiKey = key;
 
             document.querySelectorAll('.wiki-nav-btn').forEach(b => b.classList.toggle('wiki-nav-ativo', b.id === `wiki-btn-${key}`));
@@ -2670,12 +2897,20 @@
             // 3. O que este grupo faz pela planta
             html += `
             <div class="mb-12 p-6 md:p-8 rounded-3xl bg-white/5 border border-white/10 animate-fade-in" style="animation-delay: 0.1s;">
-                <h3 class="text-2xl font-display font-bold text-white mb-6 flex items-center gap-3">
+                <h3 class="text-2xl font-display font-bold text-white mb-4 flex items-center gap-3">
                     <i class="fas fa-seedling" style="color:${d.colors.main}"></i> O que este grupo faz pela planta
                 </h3>
+                ${htmlSeloEspecialista(d)}
+                ${d.alvos ? `
+                <div class="radar-abas" role="tablist">
+                    <button id="radar-aba-alvos" class="btn-toque radar-aba" onclick="setRadarModo('alvos')"><i class="fas fa-bullseye mr-2"></i> ${d.alvos.titulo}</button>
+                    <button id="radar-aba-funcoes" class="btn-toque radar-aba" onclick="setRadarModo('funcoes')"><i class="fas fa-seedling mr-2"></i> Funções na planta</button>
+                </div>` : ''}
                 <div class="w-full h-[440px] relative"><canvas id="wikiChartCanvas"></canvas></div>
-                ${d.notaFuncoes ? `<p class="text-gray-300 text-base mt-4 leading-relaxed"><i class="fas fa-info-circle mr-2" style="color:${d.colors.main}"></i>${d.notaFuncoes}</p>` : ''}
-                <div class="flex flex-wrap gap-4 mt-6">
+                <p id="radar-legenda-cinza" class="radar-legenda"><span class="radar-amostra"></span> Área cinza: o que os ${Object.keys(bioData).length} grupos da Wiki fazem juntos. Nenhum grupo faz tudo.</p>
+                ${d.alvos ? htmlTabelaAlvos(d) : ''}
+                ${d.notaFuncoes ? `<p id="radar-nota-funcoes" class="text-gray-300 text-base mt-4 leading-relaxed"><i class="fas fa-info-circle mr-2" style="color:${d.colors.main}"></i>${d.notaFuncoes}</p>` : ''}
+                <div id="radar-botoes-funcoes" class="flex flex-wrap gap-4 mt-6">
                     <button class="btn-toque btn-comparar" onclick="abrirListaComparar()"><i class="fas fa-layer-group mr-2"></i> Comparar com…</button>
                     <button id="btn-limpar-comparar" class="btn-toque btn-limpar ${window.wikiCompareKey ? '' : 'hidden'}" onclick="setCompare(null)"><i class="fas fa-times mr-2"></i> Limpar comparação</button>
                     <button class="btn-toque btn-limpar" onclick="abrirMatrizFuncoes()"><i class="fas fa-th mr-2"></i> Quem faz o quê</button>
@@ -3186,6 +3421,67 @@
 
 
     <script>
+        // ===== Aba Fatores: cartões tocáveis, régua de viabilidade e atalhos para o simulador =====
+        function abrirCartaoFator(card, ev) {
+            if (ev && ev.target && ev.target.closest('button, input, label, .fc-viab')) return;
+            const aberto = !card.classList.contains('fc-aberto');
+            card.classList.toggle('fc-aberto', aberto);
+            card.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+        }
+        document.addEventListener('keydown', ev => {
+            const card = ev.target && ev.target.closest && ev.target.closest('.fc-card');
+            if (card && ev.target === card && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); abrirCartaoFator(card); }
+        });
+
+        function formatarCelulas(n) {
+            if (n >= 1e6) return (n / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + (n >= 2e6 ? ' milhões' : ' milhão');
+            if (n >= 1e3) return Math.round(n / 1e3).toLocaleString('pt-BR') + ' mil';
+            return Math.round(n).toLocaleString('pt-BR');
+        }
+        function atualizarViabilidade() {
+            const sl = document.getElementById('fc-viab-slider');
+            if (!sl) return;
+            const n = Math.pow(10, parseFloat(sl.value));
+            const META = 1.2e6;
+            document.getElementById('fc-viab-valor').textContent = formatarCelulas(n);
+            const msg = document.getElementById('fc-viab-msg');
+            const box = sl.closest('.fc-viab');
+            let txt, estado;
+            if (n >= META) {
+                estado = 'ok';
+                txt = 'Acima da meta de 1,2 milhão por semente: o rizóbio do produto chega à raiz em número suficiente.';
+            } else if (n >= META / 10) {
+                estado = 'atencao';
+                txt = 'Abaixo da meta de 1,2 milhão por semente. Sol, calor, espera até o plantio ou química na semente costumam explicar a perda.';
+            } else {
+                estado = 'ruim';
+                const falta = Math.round(META / n);
+                txt = 'Muito abaixo da meta (cerca de ' + falta.toLocaleString('pt-BR') + ' vezes menos). Assim, os rizóbios que já estão no solo tendem a chegar à raiz antes.';
+            }
+            msg.textContent = txt;
+            box.dataset.estado = estado;
+            // posição da meta na régua (log 10^4 a 10^7)
+            const pos = (Math.log10(META) - 4) / 3 * 100;
+            box.style.setProperty('--fc-meta', pos.toFixed(2));
+        }
+
+        function verNoSimulador(cenario, ev) {
+            if (ev) ev.stopPropagation();
+            const alvo = document.getElementById('fatores-simulador-titulo');
+            if (alvo) alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const enviar = () => {
+                const f = window.simuladorFatoresFrame;
+                if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'cenario', payload: cenario }, '*');
+            };
+            const f = window.simuladorFatoresFrame;
+            if (f && f.dataset.carregado === '1') enviar();
+            else if (f) f.addEventListener('load', () => setTimeout(enviar, 150), { once: true });
+        }
+
+        document.addEventListener('DOMContentLoaded', atualizarViabilidade);
+    </script>
+
+    <script>
         document.addEventListener("DOMContentLoaded", () => {
             // Guarda a referência da função original definida no bloco anterior
             const oldSwitch = window.switchView;
@@ -3197,15 +3493,17 @@
 
                 const isLight = document.documentElement.classList.contains('light-mode');
 
-                // Carrega o simulador NOVO se estiver na view 'lab'
-                if (view === 'lab') {
+                // Carrega o simulador na aba Fatores (antes ficava no Lab, que some no modo tela)
+                if (view === 'factors') {
                     if (!window.simuladorFatoresFrame) {
                         const container = document.getElementById('simulador-fatores-container');
                         container.innerHTML = ''; // Limpa anterior
                         const iframe = document.createElement('iframe');
                         iframe.src = 'simulador.html'; // Trocado de fatoresnovo3.html para simulador.html
                         iframe.style.width = '100%';
-                        iframe.style.height = '850px';
+                        iframe.style.height = '760px';
+                        iframe.id = 'simulador-fatores-frame';
+                        iframe.addEventListener('load', () => { iframe.dataset.carregado = '1'; });
                         iframe.style.border = 'none';
                         iframe.style.background = 'transparent';
                         iframe.style.minHeight = '600px';
