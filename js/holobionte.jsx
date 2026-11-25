@@ -66,7 +66,11 @@
         const [caixa, setCaixa] = useState({ w: 0, h: 0 });
         useLayoutEffect(() => {
             const el = ref.current; if (!el) return;
-            const medir = () => { const r = el.getBoundingClientRect(); setCaixa(c => (Math.abs(c.w - r.width) < 1 && Math.abs(c.h - r.height) < 1) ? c : { w: r.width, h: r.height }); };
+            const medir = () => {
+                const w = el.clientWidth, h = el.clientHeight;
+                if (!w || !h) return;
+                setCaixa(c => w === c.w && h === c.h ? c : { w, h });
+            };
             medir();
             const ro = new ResizeObserver(medir); ro.observe(el);
             window.addEventListener('rizo-alturas', medir);
@@ -76,7 +80,23 @@
     }
 
     // ---------- Mapa (palco com a proporção do vídeo) ----------
-    function Mapa({ largura, nodes, ativos, sel, onSel, mostrarDica }) {
+    function Mapa({ largura, nodes, ativos, sel, onSel, mostrarDica, foco }) {
+        const videoRef = useRef(null);
+        useEffect(() => {
+            const video = videoRef.current;
+            const atualizar = () => {
+                if (window.rizoAbaAtual === 'holobionte' && !document.hidden) video.play().catch(() => {});
+                else video.pause();
+            };
+            atualizar();
+            window.addEventListener('rizo-aba', atualizar);
+            document.addEventListener('visibilitychange', atualizar);
+            return () => {
+                window.removeEventListener('rizo-aba', atualizar);
+                document.removeEventListener('visibilitychange', atualizar);
+                video.pause();
+            };
+        }, []);
         const W = largura, H = largura / PROPORCAO;
         const escala = modoTela() ? 1.12 : 1;
         const pequeno = W < 360;                                          // celular deitado: palco bem pequeno
@@ -86,22 +106,24 @@
         const px = (p) => [p.x / 100 * W, p.y / 100 * H];
         const [cx, cy] = px(centro);
         return h('div', { className: 'holo-palco relative rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl bg-slate-100 border border-slate-200 dark:bg-slate-900 dark:border-slate-800', style: { width: W, height: H } },
-            h('video', { src: './assets/Looping_animation_of_202511241815.mp4', autoPlay: true, loop: true, muted: true, playsInline: true, className: 'absolute inset-0 w-full h-full opacity-70', style: { objectFit: 'fill' } }),
+            h('video', { ref: videoRef, src: './assets/Looping_animation_of_202511241815.mp4', preload: 'metadata', loop: true, muted: true, playsInline: true, className: 'absolute inset-0 w-full h-full opacity-70', style: { objectFit: 'fill' } }),
             h('svg', { className: 'absolute inset-0 pointer-events-none', width: W, height: H, viewBox: `0 0 ${W} ${H}` },
                 nodes.filter(n => n.id !== 1).map(n => {
                     const [x, y] = px(n.position);
-                    const on = ativos.has(n.id), eSel = sel.id === n.id;
-                    return h('line', {
-                        key: 'l' + n.id, x1: cx, y1: cy, x2: x, y2: y,
-                        stroke: eSel ? HEX[n.color] : (on ? '#e2e8f0' : '#94a3b8'),
-                        strokeOpacity: eSel ? 0.95 : (on ? 0.55 : 0.15), strokeWidth: eSel ? 3 : 1.6,
-                        strokeDasharray: '6 6', className: eSel ? 'holo-fluxo' : '', style: { transition: 'stroke .4s, stroke-opacity .4s' }
-                    });
+                    const on = ativos.has(n.id), eSel = foco && sel.id === n.id;
+                    const coordenadas = { x1: cx, y1: cy, x2: x, y2: y };
+                    return h('g', { key: 'l' + n.id },
+                        h('line', { ...coordenadas,
+                            stroke: eSel ? HEX[n.color] : (on ? '#e2e8f0' : '#94a3b8'),
+                            strokeOpacity: eSel ? .92 : (on ? (foco ? .27 : .55) : .15),
+                            strokeWidth: eSel ? 2.6 : 1.6, strokeDasharray: '6 6', className:'holo-linha' }),
+                        eSel && h('line', { ...coordenadas, pathLength: 100, stroke: HEX[n.color], className:'holo-pulso-linha' })
+                    );
                 })
             ),
             nodes.map(n => {
                 const [x, y] = px(n.position);
-                const eSel = sel.id === n.id, on = ativos.has(n.id), centro = n.id === 1;
+                const centro = n.id === 1, eSel = sel.id === n.id && (foco || centro), on = ativos.has(n.id);
                 const s = centro ? tam * (pequeno ? 1.15 : 1.3) : tam;
                 // rótulo: abaixo (padrão) ou acima; encostado na borda quando o ponto está perto dela
                 let estiloRot;
@@ -113,10 +135,11 @@
                 }
                 return h('button', {
                     key: n.id, type: 'button', onClick: () => onSel(n), 'aria-label': n.title, 'aria-pressed': eSel,
-                    className: 'holo-no absolute outline-none' + (on ? '' : ' holo-apagado'),
+                    className: 'holo-no absolute outline-none' + (on ? '' : ' holo-apagado') +
+                        (foco && on && !eSel && !centro ? ' holo-em-segundo-plano' : ''),
                     style: { left: x - s / 2, top: y - s / 2, width: s, height: s, zIndex: eSel ? 6 : (centro ? 5 : 4) }
                 },
-                    eSel && h('span', { className: `absolute inset-0 rounded-full bg-${n.color}-500 blur-xl opacity-40 animate-pulse` }),
+                    eSel && h('span', { className: `absolute inset-0 rounded-full bg-${n.color}-500 blur-xl opacity-40` }),
                     h('span', {
                         className: 'relative flex items-center justify-center w-full h-full rounded-2xl border backdrop-blur-md shadow-lg transition-all duration-300 ' +
                             (eSel ? `bg-white/95 border-${n.color}-500 shadow-xl shadow-${n.color}-500/40 dark:bg-slate-800/90 scale-110` : `bg-white/70 border-slate-300 dark:bg-slate-900/70 dark:border-slate-600 hover:scale-105`)
@@ -147,7 +170,7 @@
             h('div', { className: 'holo-pcab relative overflow-hidden border-b border-slate-200 bg-gradient-to-br from-slate-50 to-white dark:border-slate-700/50 dark:from-slate-800 dark:to-slate-900' },
                 h('div', { className: `absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 bg-${c}-500/20 dark:bg-${c}-500/10` }),
                 h('div', { className: 'relative z-10 flex items-start gap-3' },
-                    h('div', { className: 'min-w-0 flex-1' },
+                    h('div', { key: node.id, className: 'min-w-0 flex-1 holo-texto-enfoque' },
                         h('span', { className: `inline-block px-2.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border bg-${c}-100 text-${c}-700 border-${c}-200 dark:bg-${c}-500/20 dark:text-${c}-300 dark:border-${c}-500/30` }, node.category),
                         h('h2', { className: 'holo-ptit font-bold mt-2 text-slate-800 dark:text-white leading-tight' }, node.title),
                         h('p', { className: `holo-psub font-medium mt-1 text-${c}-600 dark:text-${c}-300` }, node.shortDesc)
@@ -156,7 +179,7 @@
                 )
             ),
             // corpo: conceito + explicação curta; detalhes moleculares e impacto ficam em seções que abrem
-            !fechado && h('div', { className: 'holo-pcorpo flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-4' },
+            !fechado && h('div', { key: node.id, className: 'holo-pcorpo holo-texto-enfoque flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-4' },
                 h('div', null,
                     h('h3', { className: 'holo-psec text-slate-500' }, h(Layers, { className: 'w-3.5 h-3.5' }), 'Conceito chave'),
                     h('p', { className: 'holo-ptxt font-semibold text-slate-800 dark:text-slate-100' }, node.details.concept)
@@ -240,7 +263,8 @@
             // área útil: mapa + painel
             h('div', { ref: areaRef, className: 'holo-area flex-1 min-h-0' },
                 palcoW > 0 && h('div', { className: 'flex ' + (lado ? 'flex-row items-start justify-center' : 'flex-col items-center'), style: { gap: lado ? GAP : 10, height: '100%' } },
-                    h(Mapa, { largura: palcoW, nodes: data, ativos, sel: selectedNode, onSel: escolher, mostrarDica: !tocou && palcoW >= 520 }),
+                    h(Mapa, { largura: palcoW, nodes: data, ativos, sel: selectedNode, onSel: escolher,
+                        foco: tocou && selectedNode.id !== 1 && modoPainel !== 'fechado', mostrarDica: !tocou && palcoW >= 520 }),
                     lado
                         ? h('div', { style: { width: painelW, height: palcoH } }, painel)
                         : h('div', { className: 'holo-painel-pilha' + (modoPainel === 'expandido' ? ' holo-folha' : ''), style: modoPainel === 'expandido' ? {} : { width: palcoW, flex: modoPainel === 'fechado' ? '0 0 auto' : '1 1 0', minHeight: modoPainel === 'fechado' ? 0 : 170 } }, painel),

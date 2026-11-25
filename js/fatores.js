@@ -753,6 +753,25 @@ corpoGraficoExpandido.addEventListener('keydown', ev => {
 
 visaoGeral();
 
+window.addEventListener('rizo-demo-frame', ev => {
+  const { rizoQuiosqueAcao, indice } = ev.detail;
+  if (rizoQuiosqueAcao === 'fechar') {
+    expansaoGraficos.modal?.querySelector('.ficha-fundo .fechar')?.click();
+    expansaoGraficos.fechar();
+  }
+  if (rizoQuiosqueAcao === 'matriz') visaoGeral();
+  if (rizoQuiosqueAcao === 'grafico') {
+    const selecao = F.exps.filter(e => e.conferido && ['linha', 'colunas', 'barras'].includes(e.grafico));
+    const estudo = selecao[indice % selecao.length];
+    if (!estudo) return;
+    const fator = estudo.fatores[0];
+    abrirFator(fator);
+    mostrarMedida(estudo.medida);
+    const botao = document.querySelector(`#c-${estudo.id} .grafico-expandir`);
+    botao?.scrollIntoView({ behavior:'instant', block:'center' });
+    botao?.click();
+  }
+});
 
 // ---------- altura automática dentro do index (iframe) ----------
 function enviarAltura() {

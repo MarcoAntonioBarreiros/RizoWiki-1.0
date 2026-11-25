@@ -74,6 +74,10 @@ function montar() {
 
 const caixa = document.getElementById('mec');
 const pop = document.getElementById('pop-raiz');
+const trilha = (d, cor, etapa) => `<path d="${d}" class="mec-pulso" data-etapa="${etapa}" pathLength="100" fill="none" stroke="${cor}" aria-hidden="true"/>`;
+function marcarPulso(ligacoes, ativo) {
+  ligacoes.forEach(l => l.classList.toggle('luminoso', ativo !== undefined && l.dataset.ks.split(',').includes(String(ativo))));
+}
 let sel = null;
 // altura útil da tela do index (sem o cabeçalho); chega por postMessage. Sem ela, um valor de notebook.
 let telaUtil = 700, modoTela = false;
@@ -86,7 +90,7 @@ const larguraTexto = (t, f) => t.length * f * .56;
 function desenhar(W) {
   const { oOrd, mOrd } = montar();
   const nMax = Math.max(PROB.length, oOrd.length, mOrd.length);
-  const disponivel = telaUtil - (modoTela ? 215 : 190);           // título, instrução e legenda ficam na mesma tela
+  const disponivel = (expansaoMec.ativa ? innerHeight : telaUtil) - (modoTela ? 215 : 190);
   const passo = Math.max(40, Math.min(modoTela ? 70 : 62, (disponivel - 40) / nMax));
   const T = 28, H = Math.round(T + nMax * passo + 8);
   const hNo = Math.min(modoTela ? 46 : 40, passo - 6);
@@ -108,6 +112,7 @@ function desenhar(W) {
     <text x="2" y="14" class="col-tit">PROBLEMA NO CAMPO</text><text x="${W / 2}" y="14" class="col-tit" text-anchor="middle">MICRORGANISMO</text><text x="${W - 2}" y="14" class="col-tit" text-anchor="end">MECANISMO</text>`;
   Object.entries(seg).forEach(([id, s]) => {
     g += `<g class="lig" data-ks="${s.ks.join(',')}"><path d="${curva(s)}" fill="none" stroke="${s.cor}" stroke-width="${modoTela ? 5 : 4}" stroke-linecap="round" ${s.pend ? 'stroke-dasharray="7 6"' : ''} class="v"/>
+      ${trilha(curva(s), s.cor, s.a.col)}
       <path d="${curva(s)}" fill="none" stroke="transparent" stroke-width="20" class="alvo"/></g>`;
   });
   Object.values(nos).forEach(n => {
@@ -125,6 +130,7 @@ function desenhar(W) {
   acenderFn = ks => {
     const set = new Set(ks);
     ligs.forEach(l => { const on = l.dataset.ks.split(',').some(k => set.has(+k)); l.classList.toggle('on', on); l.classList.toggle('off', !on); });
+    marcarPulso(ligs, ks[0]);
     const ativos = new Set(); ks.forEach(k => { const f = FLUXOS[k]; ativos.add(f[0]); ativos.add('g:' + f[1]); ativos.add(f[2]); });
     nosEl.forEach(n => n.classList.toggle('off', !ativos.has(n.dataset.id)));
   };
@@ -138,6 +144,11 @@ function desenhar(W) {
     a.el.addEventListener('pointerenter', ev => { if (ev.pointerType === 'mouse' && estagio < 2) { acenderFn(a.ks); dicaToque(a.el, 'clique para ver a explicação'); } });
   });
   caixa.querySelector('svg').addEventListener('pointerleave', ev => { if (ev.pointerType === 'mouse' && estagio < 2) limpar(); });
+  const mantido = alvos.find(a => a.chave === sel);
+  if (mantido) {
+    acenderFn(mantido.ks);
+    if (estagio === 2) mostrarPop(mantido.ks, mantido.el, mantido.titulo, mantido.cor);
+  }
 }
 
 // ---------- versão vertical contextual (celular): um foco por vez, Problema → Microrganismo → Mecanismo de cima para baixo ----------
@@ -191,7 +202,6 @@ function desenharVertical() {
   });
   const chipOn = caixa.querySelector('.v-chip.on');
   if (chipOn) { const tira = chipOn.parentElement; tira.scrollLeft = chipOn.offsetLeft - (tira.clientWidth - chipOn.offsetWidth) / 2; }
-  V.colunas = [cA, cB];
   ligarVertical(ks);
   aplicarSub(ks, true);
 }
@@ -203,37 +213,47 @@ function trocarModo(m) {
   V.foco = ks.length ? FLUXOS[ks[0]][col] : (m === 'prob' ? PROB[0].id : m === 'org' ? ORGS_TODOS()[0] : MECS_TODOS()[0]);
   desenharVertical();
 }
-// ligações: o foco desce por um tronco à esquerda e entra em cada item da 1ª coluna; entre as colunas, curvas na cor do microrganismo
+// Cada trajeto tem os mesmos dois pares da visão horizontal, qualquer que seja o foco.
 function ligarVertical(ks) {
   const diag = caixa.querySelector('.v-diag'), svg = caixa.querySelector('.v-lig');
   if (!diag || !svg) return;
-  const rd = diag.getBoundingClientRect();
-  svg.setAttribute('width', rd.width); svg.setAttribute('height', rd.height); svg.setAttribute('viewBox', `0 0 ${rd.width} ${rd.height}`);
+  const rd = diag.getBoundingClientRect(), w = diag.offsetWidth, h = diag.offsetHeight;
+  const sx = w / (rd.width || 1), sy = h / (rd.height || 1);
+  svg.setAttribute('width', w); svg.setAttribute('height', h); svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
   const pos = {};
-  caixa.querySelectorAll('.v-no').forEach(b => { const r = b.getBoundingClientRect(); pos[b.dataset.id] = { l: r.left - rd.left, r: r.right - rd.left, cx: r.left - rd.left + r.width / 2, cy: r.top - rd.top + r.height / 2, bot: r.bottom - rd.top }; });
-  const [cA, cB] = V.colunas;
-  const idNivel = (f, n) => n === 0 ? f[0] : n === 1 ? 'g:' + f[1] : f[2];
-  const F = pos[idFoco()], gx = 7;
-  let html = '';
-  // tronco + ramos (neutros; o que conta é o caminho entre as colunas)
-  const ramos = {};
-  ks.forEach(k => { const a = idNivel(FLUXOS[k], cA); (ramos[a] = ramos[a] || []).push(k); });
-  Object.entries(ramos).forEach(([a, lk]) => {
-    const A = pos[a]; if (!F || !A) return;
-    const y0 = F.bot, yc = y0 + 14;
-    const d = `M${F.cx},${y0} C${F.cx},${yc + 6} ${gx},${yc - 6} ${gx},${yc + 18} L${gx},${A.cy - 12} Q${gx},${A.cy} ${A.l},${A.cy}`;
-    html += `<g class="v-l v-ramo" data-ks="${lk.join(',')}"><path d="${d}" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round" class="v"/></g>`;
+  caixa.querySelectorAll('.v-no').forEach(b => {
+    const r = b.getBoundingClientRect();
+    pos[b.dataset.id] = { l: (r.left - rd.left) * sx, r: (r.right - rd.left) * sx,
+      cx: (r.left - rd.left + r.width / 2) * sx, cy: (r.top - rd.top + r.height / 2) * sy, bot: (r.bottom - rd.top) * sy };
   });
+  const idNivel = (f, n) => n === 0 ? f[0] : n === 1 ? 'g:' + f[1] : f[2];
+  const idCentral = idFoco(), F = pos[idCentral];
+  if (!F) return;
+  function ramo(A, invertido) {
+    const esquerda = A.cx < w / 2, gx = esquerda ? 7 : w - 7, x = esquerda ? A.l : A.r;
+    const y0 = F.bot, y1 = Math.min(y0 + 29, A.cy - 9);
+    return invertido
+      ? `M${x},${A.cy} Q${gx},${A.cy} ${gx},${A.cy - 8} L${gx},${y1} C${gx},${y0 + 6} ${F.cx},${y0 + 11} ${F.cx},${y0}`
+      : `M${F.cx},${y0} C${F.cx},${y0 + 11} ${gx},${y0 + 6} ${gx},${y1} L${gx},${A.cy - 8} Q${gx},${A.cy} ${x},${A.cy}`;
+  }
   const seg = {};
-  ks.forEach(k => { const f = FLUXOS[k]; const a = idNivel(f, cA), b = idNivel(f, cB), id = a + '>' + b; (seg[id] = seg[id] || { a, b, ks: [], cor: ORG[f[1]] }).ks.push(k); });
+  ks.forEach(k => {
+    const f = FLUXOS[k];
+    for (const etapa of [0, 1]) {
+      const a = idNivel(f, etapa), b = idNivel(f, etapa + 1), id = a + '>' + b + ':' + f[1];
+      (seg[id] ||= { a, b, etapa, ks: [], cor: ORG[f[1]] }).ks.push(k);
+    }
+  });
+  let html = '';
   Object.values(seg).forEach(s => {
     const A = pos[s.a], B = pos[s.b]; if (!A || !B) return;
     const pend = s.ks.every(k => FLUXOS[k][5] === 'pendente'), mx = (A.r + B.l) / 2;
-    const d = `M${A.r},${A.cy} C${mx},${A.cy} ${mx},${B.cy} ${B.l},${B.cy}`;
-    html += `<g class="v-l" data-ks="${s.ks.join(',')}"><path d="${d}" fill="none" stroke="${s.cor}" stroke-width="4" stroke-linecap="round" ${pend ? 'stroke-dasharray="7 6"' : ''} class="v"/><path d="${d}" fill="none" stroke="transparent" stroke-width="22" class="alvo"/></g>`;
+    const d = s.a === idCentral ? ramo(B, false) : s.b === idCentral ? ramo(A, true)
+      : `M${A.r},${A.cy} C${mx},${A.cy} ${mx},${B.cy} ${B.l},${B.cy}`;
+    html += `<g class="v-l" data-ks="${s.ks.join(',')}"><path d="${d}" fill="none" stroke="${s.cor}" stroke-width="4" stroke-linecap="round" ${pend ? 'stroke-dasharray="7 6"' : ''} class="v"/>${trilha(d, s.cor, s.etapa)}<path d="${d}" fill="none" stroke="transparent" stroke-width="18" class="alvo"/></g>`;
   });
   svg.innerHTML = html;
-  svg.querySelectorAll('.v-l:not(.v-ramo)').forEach(l => l.onclick = ev => {
+  svg.querySelectorAll('.v-l').forEach(l => l.onclick = ev => {
     ev.stopPropagation();
     const lk = l.dataset.ks.split(',').map(Number);
     V.sub = (V.sub && V.sub.chave === l.dataset.ks) ? null : { id: null, chave: l.dataset.ks, ks: lk, el: l, titulo: lk.length > 1 ? 'Caminhos deste trecho' : 'Caminho' };
@@ -243,7 +263,9 @@ function ligarVertical(ks) {
 // destaca o que foi tocado e mostra a ficha (todos os caminhos do foco, ou só os do item tocado)
 function aplicarSub(ks, inicial) {
   const vis = V.sub ? V.sub.ks : ks, set = new Set(vis);
-  caixa.querySelectorAll('.v-l').forEach(l => { const on = l.dataset.ks.split(',').some(k => set.has(+k)); l.classList.toggle('on', !!V.sub && on); l.classList.toggle('off', !!V.sub && !on); });
+  const ligacoes = caixa.querySelectorAll('.v-l');
+  ligacoes.forEach(l => { const on = l.dataset.ks.split(',').some(k => set.has(+k)); l.classList.toggle('on', !!V.sub && on); l.classList.toggle('off', !!V.sub && !on); });
+  marcarPulso(ligacoes, V.sub ? vis[0] : undefined);
   const ativos = new Set(); vis.forEach(k => { const f = FLUXOS[k]; ativos.add(f[0]); ativos.add('g:' + f[1]); ativos.add(f[2]); });
   caixa.querySelectorAll('.v-no').forEach(b => { b.classList.toggle('off', !!V.sub && !ativos.has(b.dataset.id)); b.classList.toggle('v-tocado', !!V.sub && V.sub.id === b.dataset.id); });
   const ficha = caixa.querySelector('#v-ficha');
@@ -275,7 +297,7 @@ function renderizar(forcar) {
   larguraAtual = W;
   const nova = W < LIMITE_VERTICAL ? 'vertical' : 'completa';
   document.documentElement.classList.toggle('mec-vertical', nova === 'vertical');
-  if (nova !== versao) { limpar(); versao = nova; }
+  if (nova !== versao) { pop.innerHTML = ''; dicaEl.hidden = true; versao = nova; }
   if (versao === 'vertical') desenharVertical(); else desenhar(W);
 }
 
@@ -289,8 +311,10 @@ function dicaToque(el, txt) {
   const ehNo = el.classList.contains('no');
   const x = ehNo ? r.left + r.width / 2 - dw / 2 : (window._ultX || r.left) - dw / 2;
   const y = ehNo ? r.bottom + 6 : (window._ultY || r.top) + 14;
-  dicaEl.style.left = Math.max(8, Math.min(x + scrollX, scrollX + innerWidth - dw - 8)) + 'px';
-  dicaEl.style.top = (y + scrollY) + 'px';
+  const dialogo = caixa.closest('dialog[open].expandida');
+  const limite = dialogo?.getBoundingClientRect();
+  dicaEl.style.left = Math.max(8, Math.min(x - (limite?.left ?? -scrollX), (dialogo?.clientWidth ?? innerWidth) - dw - 8)) + 'px';
+  dicaEl.style.top = (y - (limite?.top ?? 0) + (dialogo?.scrollTop ?? scrollY)) + 'px';
 }
 addEventListener('pointermove', ev => { window._ultX = ev.clientX; window._ultY = ev.clientY; }, { passive: true });
 addEventListener('pointerdown', ev => { window._ultX = ev.clientX; window._ultY = ev.clientY; }, true);
@@ -308,7 +332,7 @@ function tocar(a, tipo) {
 function limpar() {
   pop.innerHTML = ''; sel = null; estagio = 0; dicaEl.hidden = true;
   if (versao === 'vertical') return;                          // na versão vertical o destaque some só por toque no próprio diagrama
-  caixa.querySelectorAll('.on, .off').forEach(e => e.classList.remove('on', 'off'));
+  caixa.querySelectorAll('.on, .off, .luminoso').forEach(e => e.classList.remove('on', 'off', 'luminoso'));
 }
 function mostrarPop(ks, el, titulo, cor) {
   const itens = ks.map(k => {
@@ -319,23 +343,71 @@ function mostrarPop(ks, el, titulo, cor) {
   }).join('');
   pop.innerHTML = `<div class="pop" style="--c:${cor}" role="dialog"><button class="fechar" aria-label="Fechar"><i class="fas fa-xmark"></i></button>
     <h3>${esc(titulo)}</h3><p class="sub">${ks.length} ${ks.length > 1 ? 'caminhos' : 'caminho'} na literatura reunida · toque fora para fechar</p>${itens}</div>`;
-  const p = pop.firstElementChild, r = el.getBoundingClientRect(), W = innerWidth, pw = p.offsetWidth, ph = p.offsetHeight;
-  let x = r.right + 12, y = r.top + scrollY - 10;
-  if (x + pw > W - 8) x = r.left - pw - 12;
-  if (x < 8) { x = Math.max(8, Math.min(W - pw - 8, r.left + r.width / 2 - pw / 2)); y = r.bottom + scrollY + 8; }
-  y = Math.max(8, Math.min(y, document.documentElement.scrollHeight - ph - 8));
+  const p = pop.firstElementChild, r = el.getBoundingClientRect(), pw = p.offsetWidth, ph = p.offsetHeight;
+  const dialogo = caixa.closest('dialog[open].expandida'), limite = dialogo?.getBoundingClientRect();
+  const W = dialogo?.clientWidth ?? innerWidth, sx = limite?.left ?? 0, sy = (dialogo?.scrollTop ?? scrollY) - (limite?.top ?? 0);
+  let x = r.right - sx + 12, y = r.top + sy - 10;
+  if (x + pw > W - 8) x = r.left - sx - pw - 12;
+  if (x < 8) { x = Math.max(8, Math.min(W - pw - 8, r.left - sx + r.width / 2 - pw / 2)); y = r.bottom + sy + 8; }
+  y = Math.max(8, Math.min(y, (dialogo?.scrollHeight ?? document.documentElement.scrollHeight) - ph - 8));
   p.style.left = x + 'px'; p.style.top = y + 'px';
   p.querySelector('.fechar').onclick = ev => { ev.stopPropagation(); limpar(); };
   p.addEventListener('click', ev => ev.stopPropagation());
 }
-document.addEventListener('click', limpar);
+document.addEventListener('click', ev => { if (!ev.target.closest('.rizo-maximizar')) limpar(); });
 
 // legenda de status
 document.getElementById('leg').innerHTML = `<span><svg width="34" height="10"><line x1="2" y1="5" x2="32" y2="5" stroke="var(--muted)" stroke-width="4" stroke-linecap="round"/></svg> com referência indicada</span>
   <span><svg width="34" height="10"><line x1="2" y1="5" x2="32" y2="5" stroke="var(--muted)" stroke-width="4" stroke-dasharray="7 6" stroke-linecap="round"/></svg> referência ainda a conferir</span>
   ${Object.values(STATUS).map(([n, c]) => `<span class="st" style="--s:${c}">${n}</span>`).join('')}`;
 
+const painelMec = caixa.closest('.panel');
+const opcoesMec = {
+  titulo: 'Mecanismos de Ação',
+  redimensionar(aberta) {
+    const camada = aberta ? caixa.closest('dialog') : document.body;
+    camada.append(pop, dicaEl);
+    requestAnimationFrame(() => renderizar(true));
+  },
+  esc() { if (pop.firstElementChild) { limpar(); return true; } }
+};
+const expansaoMec = avancarComJanelaRizo(painelMec, opcoesMec);
+if (parent !== window) {
+  const enviarExpansao = tipo => parent.postMessage({ tipo }, '*');
+  opcoesMec.abrirNoPrincipal = () => {
+    if (!opcoesMec.embutida) { expansaoMec.abrir(); return; }
+    const rect = painelMec.getBoundingClientRect().toJSON();
+    parent.postMessage({ tipo: 'fatores-expandir', rect }, '*');
+  };
+  addEventListener('message', ev => {
+    if (ev.source !== parent) return;
+    switch (ev.data?.tipo) {
+      case 'fatores-expansao-disponivel':
+        opcoesMec.embutida = true;
+        opcoesMec.fecharNoPrincipal = () => enviarExpansao('fatores-restaurar');
+        break;
+      case 'fatores-expandido': expansaoMec.abrir(null, false); break;
+      case 'fatores-transicao-concluida': expansaoMec.concluirAbertura(); renderizar(true); break;
+      case 'fatores-pedir-restauracao': if (!opcoesMec.esc()) expansaoMec.fechar(); break;
+      case 'fatores-restaurado': expansaoMec.restaurar(); break;
+    }
+  });
+  enviarExpansao('fatores-expansao-pronta');
+}
 renderizar(true);
+window.addEventListener('rizo-demo-frame', ev => {
+  const { rizoQuiosqueAcao, indice } = ev.detail;
+  if (rizoQuiosqueAcao === 'fechar') { limpar(); expansaoMec.fechar(); }
+  if (rizoQuiosqueAcao !== 'fluxo') return;
+  const chave = [0, 4, 12][indice % 3], fluxo = FLUXOS[chave];
+  if (versao === 'vertical') {
+    V.modo = 'prob'; V.foco = fluxo[0]; V.sub = { id:'g:' + fluxo[1], ks:[chave] };
+    desenharVertical();
+  } else {
+    limpar();
+    acenderFn([chave]);
+  }
+});
 let _tR = null;
 addEventListener('resize', () => { clearTimeout(_tR); _tR = setTimeout(() => renderizar(), 120); });
 // a versão vertical mede os botões: redesenha as curvas quando as fontes terminam de carregar
@@ -355,7 +427,9 @@ addEventListener('message', ev => {
 try { if (parent !== window && parent.document.documentElement.classList.contains('light-mode')) document.documentElement.classList.add('light-mode'); } catch (_) {}
 if (parent !== window) {
   document.documentElement.classList.add('embutido');
-  const enviar = () => { try { parent.postMessage({ rizoAltura: Math.ceil(document.documentElement.scrollHeight) }, '*'); } catch (_) {} };
-  new ResizeObserver(enviar).observe(document.body); addEventListener('load', enviar);
+  const wrap = document.querySelector('.wrap');
+  const enviar = () => { if (!expansaoMec.ativa && wrap.offsetHeight) parent.postMessage({ rizoAltura: Math.ceil(wrap.getBoundingClientRect().height) }, '*'); };
+  new ResizeObserver(enviar).observe(wrap);
+  addEventListener('load', enviar);
   try { parent.postMessage({ rizoPedeTela: 1 }, '*'); } catch (_) {}   // pede a altura útil ao index
 }

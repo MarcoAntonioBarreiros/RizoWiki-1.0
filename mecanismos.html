@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RizoWiki · Mecanismos</title>
 <link rel="stylesheet" href="css/all.min.css">
+<link rel="stylesheet" href="css/expansao.css?v=20261125d">
 <style>
 :root { --bg:#050816; --panel:rgba(15,23,42,.62); --panel-b:rgba(255,255,255,.08); --text:#cbd5e1; --muted:#94a3b8; --strong:#fff;
   --chip:rgba(255,255,255,.05); --chip-b:rgba(255,255,255,.14); --pill:#0f172a; --pop:#0f172a; --shadow:0 20px 50px rgba(0,0,0,.55); --accent:#0ea5e9; }
@@ -93,6 +94,21 @@ html.mec-vertical .lead { font-size:13.5px; }
   border:1px solid var(--chip-b); border-radius:999px; padding:6px 12px; box-shadow:var(--shadow); white-space:nowrap; animation:aparece .15s ease-out; }
 .dica-toque[hidden] { display:none; }
 .dica-toque i { color:var(--accent); margin-right:4px; }
+.rizo-visual-janela .panel > h1 { padding-inline-end:44px; }
+.rizo-visual-janela.expandida > .panel { border:0; min-height:100%; }
+.rizo-visual-janela.expandida .pop { max-height:calc(100dvh - 26px); overflow:auto; }
+.v-cols { padding-inline:18px; }
+.mec-pulso { display:none; pointer-events:none; stroke-width:4; stroke-linecap:round; stroke-dasharray:5 95; }
+.luminoso .mec-pulso { display:block; animation:mec-percorrer 3s linear 3 both; }
+.luminoso .mec-pulso[data-etapa="1"] { animation-delay:1.55s; }
+@keyframes mec-percorrer {
+  0% { opacity:0; stroke-dashoffset:100; }
+  10% { opacity:.9; }
+  48% { opacity:.9; }
+  58%, 100% { opacity:0; stroke-dashoffset:0; }
+}
+html.rizo-invisivel .mec-pulso { animation-play-state:paused; }
+@media (prefers-reduced-motion:reduce) { .luminoso .mec-pulso { display:none; animation:none; } }
 </style>
 </head>
 <body>
@@ -106,6 +122,8 @@ html.mec-vertical .lead { font-size:13.5px; }
   <p class="nota"><i class="fas fa-circle-info" style="color:var(--accent)"></i> Cada caminho resume o que foi descrito para estirpes estudadas, não para o gênero inteiro. Todas as linhas têm a mesma espessura: o diagrama mostra ligações, não quantidade de evidência. Os resultados medidos estão na aba Fatores.</p>
 </div></div>
 <div id="pop-raiz"></div>
-<script src="js/mecanismos.js?v=20261125b"></script>
+<script src="js/fatores-janela.js?v=20261125d"></script>
+<script src="js/quiosque-frame.js?v=20261125d"></script>
+<script src="js/mecanismos.js?v=20261125d"></script>
 </body>
 </html>

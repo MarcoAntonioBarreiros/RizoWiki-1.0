@@ -1,0 +1,102 @@
+.rizo-holobionte > dialog.expandida #root-holobionte,
+.rizo-holobionte > dialog.expandida .holo-raiz { height:100%; min-height:100%; max-width:none; }
+.rizo-holobionte .rizo-maximizar { right:clamp(10px, 2vw, 24px); }
+.rizo-holobionte .holo-topo { padding-inline-end:52px; }
+.holo-no.holo-em-segundo-plano { opacity:.72; }
+.holo-linha { transition:stroke 350ms, stroke-opacity 350ms, stroke-width 350ms; }
+.holo-pulso-linha { stroke-width:4; stroke-linecap:round; stroke-dasharray:5 95; opacity:.85; animation:rizo-percurso 2.8s linear 3; }
+.holo-texto-enfoque { animation:rizo-entrada-texto 320ms cubic-bezier(.22,.68,.26,1) both; }
+@keyframes rizo-percurso { from { stroke-dashoffset:100; } to { stroke-dashoffset:0; } }
+@keyframes rizo-entrada-texto { from { opacity:.25; } to { opacity:1; } }
+.rizo-visual-janela.expandida > .fund-bloco {
+  --altura-util:calc(100dvh - 64px); padding:14px clamp(12px, 2vw, 24px); margin:auto;
+  max-width:min(100%, 1580px);
+}
+.rizo-visual-janela.expandida > .fund-bloco .fund-topo { padding-inline-end:48px; }
+.rizo-visual-janela.expandida > .fund-bloco .fund-diagrama { max-width:min(100%, 66dvh); }
+.rizo-visual-janela.expandida #wiki-bloco-grafico,
+.rizo-visual-janela.expandida .lab-grafico { margin:0; width:100%; border:0; }
+.rizo-visual-janela.expandida #wiki-bloco-grafico > h3 { padding-inline-end:50px; }
+.rizo-visual-janela.expandida .radar-desenho { height:clamp(220px, 66dvh, 950px); }
+.rizo-visual-janela.expandida .lab-visualizacao {
+  display:flex; flex-direction:column; height:100%; padding:56px clamp(8px, 2vw, 28px) 12px;
+}
+.rizo-visual-janela.expandida .lab-opcoes { flex:none; }
+.rizo-visual-janela.expandida .lab-grafico { flex:1 1 auto; height:auto; min-height:280px; }
+.lab-grafico #dynamic-warning { right:58px; }
+#matriz-funcoes .matriz-painel { max-width:none; max-height:none; box-shadow:none; padding:clamp(12px, 3vw, 40px); }
+#matriz-funcoes h2 { padding-right:48px; }
+#matriz-funcoes-body { overflow-x:auto; }
+#matriz-funcoes:not(:has(.expandida)) { height:0; }
+.matriz-tabela :is(td, th, tr) { transition:background 260ms, opacity 260ms; }
+.matriz-tabela :is(th, .mz-nome) button { min-height:44px; }
+.matriz-tabela .mz-em-foco { background:rgba(14,165,233,.16); }
+.matriz-tabela .mz-apagado { opacity:.72; }
+.matriz-tabela .mz-cab-grupo { display:flex; align-items:center; gap:7px; }
+.matriz-tabela .mz-ficha { visibility:hidden; width:44px; border-radius:12px; flex:none; }
+.matriz-tabela .mz-em-foco .mz-ficha { visibility:visible; }
+.matriz-tabela button:focus-visible { outline:2px solid #0ea5e9; outline-offset:2px; }
+.wiki-foto-camada { position:absolute; inset:0; overflow:hidden; }
+.wiki-foto-camada .wiki-foto-img { animation:none; }
+.radar-foco {
+  position:absolute; z-index:4; color:var(--text-main); background:var(--bg-panel);
+  border:1px solid var(--glass-border); border-radius:12px; box-shadow:0 6px 25px rgba(2,6,23,.34);
+  max-width:min(310px, calc(100% - 12px)); padding:10px 13px; pointer-events:none;
+  line-height:1.4; font-size:clamp(12px,1.1vw,16px); animation:rizo-entrada-texto 250ms ease-out both;
+}
+.radar-foco strong { color:var(--text-head); } .radar-foco p { margin:4px 0; } .radar-foco ul { margin-top:6px; }
+#quiosque-aviso {
+  position:fixed; inset:auto auto max(12px, env(safe-area-inset-bottom)) 50%; transform:translateX(-50%);
+  margin:0; width:max-content; max-width:calc(100% - 30px); pointer-events:none;
+  color:#f8fafc; background:rgba(2,6,23,.82); border:1px solid rgba(148,163,184,.38);
+  padding:8px 18px; border-radius:999px; box-shadow:0 8px 25px rgba(2,6,23,.25);
+  font-weight:700; font-size:clamp(13px,1vw,20px);
+}
+#quiosque-aviso:popover-open { animation:rizo-escurecer 450ms ease-out both; }
+#pgpr-animacao {
+  --pgpr:#86efac;
+  position:absolute; inset:0; width:100%; height:100%; z-index:25; pointer-events:none; overflow:hidden;
+}
+#pgpr-animacao[data-mecanismo="nitrogen"] { --pgpr:#c4b5fd; }
+#pgpr-animacao[data-mecanismo="nutrients"] { --pgpr:#7dd3fc; }
+#pgpr-animacao[data-mecanismo="auxin"] { --pgpr:#f9a8d4; }
+#pgpr-animacao[data-mecanismo="roots"] { --pgpr:#fed7aa; }
+#pgpr-animacao[data-mecanismo="photosynthesis"] { --pgpr:#fde68a; }
+.pgpr-trajeto {
+  stroke:var(--pgpr); stroke-width:.7; fill:none; stroke-linecap:round; stroke-linejoin:round;
+  filter:drop-shadow(0 0 2px var(--pgpr)); stroke-dasharray:100 100;
+  animation:pgpr-aparecer 2.8s var(--espera) cubic-bezier(.22,.68,.26,1) both;
+}
+.pgpr-folha {
+  fill:color-mix(in srgb, var(--pgpr), transparent 84%); stroke:var(--pgpr);
+  stroke-width:.65; transform-box:fill-box; transform-origin:left bottom;
+  animation:pgpr-folha 2.3s ease-out both;
+}
+.pgpr-marca { fill:var(--pgpr); transform-box:fill-box; transform-origin:center; animation:pgpr-marca 1.8s var(--espera) ease-out 2 both; }
+.pgpr-rotulo {
+  fill:var(--pgpr); font:700 4.6px Inter,system-ui,sans-serif; text-anchor:middle;
+  stroke:#0f172a; stroke-width:1.15; stroke-linejoin:round; paint-order:stroke fill;
+  animation:rizo-entrada-texto .65s .3s ease-out both;
+}
+@keyframes pgpr-aparecer { from { stroke-dashoffset:100; opacity:.25; } to { stroke-dashoffset:0; opacity:.93; } }
+@keyframes pgpr-folha { from { opacity:.25; transform:scale(.78); } to { opacity:1; transform:none; } }
+@keyframes pgpr-marca { 0% { opacity:.25; transform:scale(.6); } 55% { opacity:1; transform:scale(1.22); } 100% { opacity:.72; transform:none; } }
+html.rizo-documento-oculto :is(.bacterium, .pgpr-trajeto, .pgpr-marca, .pgpr-folha, .pgpr-rotulo, .holo-pulso-linha),
+#view-fundamentos:not(.active-view) :is(.bacterium, #pgpr-animacao *),
+#view-holobionte:not(.active-view) .holo-pulso-linha { animation-play-state:paused; }
+@media (max-width:1023px) {
+  .rizo-visual-janela.expandida > .fund-bloco .fund-diagrama { max-width:min(100%, 63dvh); }
+}
+@media (max-width:640px) {
+  html .rizo-holobionte > dialog.expandida { --folga-x:4px; }
+  .rizo-holobionte > dialog.expandida .holo-raiz,
+  .rizo-visual-janela.expandida > .fund-bloco { padding-inline:4px; }
+  .rizo-visual-janela.expandida .lab-opcoes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+  .rizo-visual-janela.expandida .lab-opcoes > div { padding:7px; min-width:0; }
+}
+@media (prefers-reduced-motion:reduce) {
+  #quiosque-aviso:popover-open, .view-section.active-view, .holo-texto-enfoque, .holo-dica, .holo-folha, .radar-foco { animation:none; }
+  .holo-pulso-linha { display:none; }
+  .holo-linha, .holo-no, .matriz-tabela :is(td, th, tr) { transition:none; }
+  :is(#pgpr-animacao *, .bacterium, .ping-ring) { animation:none !important; }
+}

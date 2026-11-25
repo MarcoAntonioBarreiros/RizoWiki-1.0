@@ -257,6 +257,7 @@ html.grafico-em-apresentacao body { overflow:hidden; }
 .dica-leitura + .dica-leitura { margin-top:7px; border-top:1px solid var(--chip-b); padding-top:7px; }
 .grafico-modal .ficha-fundo { position:fixed; inset:0; display:grid; place-items:center; padding:12px; }
 .grafico-modal .ficha { position:relative; top:auto; left:auto; transform:none; max-height:100%; overflow:auto; }
+html.rizo-invisivel .wrap * { animation-play-state:paused !important; }
 @media (max-width:640px), (max-height:500px) { .grafico-modal { --folga:7px; border-radius:14px; } }
 @media (max-height:500px) and (orientation:landscape) {
   .grafico-modal { --margem:10px; }
@@ -269,7 +270,9 @@ html.grafico-em-apresentacao body { overflow:hidden; }
 <div class="wrap" id="app"></div>
 <div id="pop-raiz"></div>
 <script src="js/fatores_dados.js?v=20261125b"></script>
-<script src="js/fatores-expandir.js?v=20261125c"></script>
-<script src="js/fatores.js?v=20261125c"></script>
+<script src="js/fatores-janela.js?v=20261125d"></script>
+<script src="js/quiosque-frame.js?v=20261125d"></script>
+<script src="js/fatores-expandir.js?v=20261125d"></script>
+<script src="js/fatores.js?v=20261125d"></script>
 </body>
 </html>

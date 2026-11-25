@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="css/expansao.css?v=20261125d">
+    <link rel="stylesheet" href="css/imersao.css?v=20261125d">
     <title>RizoWiki</title>
 
     <!-- Tailwind CSS (offline) -->
@@ -1034,8 +1036,6 @@
         html.light-mode #fc-viab-valor { color:#0f172a; }
 
         /* Matriz "Quem faz o quê" */
-        #matriz-funcoes { position:fixed; inset:0; z-index:90; background:rgba(2,6,23,.85); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:2rem; }
-        #matriz-funcoes.aberto { display:flex; }
         .matriz-painel { background:var(--bg-panel); color:var(--text-main); border-radius:1.5rem; max-width:1400px; width:100%; max-height:92vh; overflow:auto; padding:2rem 2.5rem; box-shadow:0 30px 80px rgba(0,0,0,.5); }
         .matriz-tabela { width:100%; border-collapse:collapse; font-size:1.05rem; }
         .matriz-tabela th { text-align:center; padding:.9rem .6rem; font-weight:700; color:var(--text-head); border-bottom:2px solid rgba(148,163,184,.4); }
@@ -1163,8 +1163,6 @@
         .holo-no { padding: 0; background: none; border: 0; cursor: pointer; transition: opacity .4s, filter .4s; }
         .holo-no.holo-apagado { opacity: .3; filter: grayscale(1); }
         .holo-rotulo { padding: .2em .6em; line-height: 1.25; }
-        .holo-fluxo { animation: holoFluxo 1s linear infinite; }
-        @keyframes holoFluxo { to { stroke-dashoffset: -24; } }
         .holo-dica { animation: holoDica 2.4s ease-in-out infinite; }
         @keyframes holoDica { 0%,100% { opacity: .65; } 50% { opacity: 1; } }
         .holo-pcab { padding: 1.1rem 1.25rem 1rem; }
@@ -1286,30 +1284,6 @@
         }
 
         /* ===== Fundamentos: título compacto e planta inteira (sem corte) ===== */
-        .fatores-janela {
-            position: static; width: 100%; max-width: none; max-height: none; margin: 0;
-            padding: 0; border: 0; background: transparent; overflow: visible;
-        }
-        .fatores-janela > iframe { display: block; }
-        html.fatores-travar-rolagem { scrollbar-gutter: stable; }
-        .fatores-janela.expandida {
-            --folga-x: clamp(12px, 3vw, 56px); --folga-y: clamp(12px, 4vh, 44px);
-            position: fixed;
-            inset: max(var(--folga-y), env(safe-area-inset-top)) max(var(--folga-x), env(safe-area-inset-right))
-                   max(var(--folga-y), env(safe-area-inset-bottom)) max(var(--folga-x), env(safe-area-inset-left));
-            margin: auto; width: auto; height: auto; max-width: 1600px; transform-origin: top left;
-            border-radius: 20px; overflow: clip; overscroll-behavior: contain;
-        }
-        html.modo-tela .fatores-janela.expandida { --folga-x: 16px; --folga-y: 16px; max-width: none; }
-        @media (max-width: 640px), (max-height: 500px) {
-            html .fatores-janela.expandida, html.modo-tela .fatores-janela.expandida { --folga-x: 7px; --folga-y: 7px; border-radius: 14px; }
-        }
-        .fatores-janela::backdrop { background: rgba(2, 6, 23, .76); animation: fatores-escurecer 350ms both; }
-        .fatores-janela.restaurando::backdrop { animation: fatores-clarear 350ms both; }
-        @keyframes fatores-escurecer { from { opacity: 0; } }
-        @keyframes fatores-clarear { to { opacity: 0; } }
-        @media (prefers-reduced-motion: reduce) { .fatores-janela::backdrop, .fatores-janela.restaurando::backdrop { animation: none; } }
-
         .fund-topo { margin-bottom: 12px; }
         .fund-topo h2 { font-size: clamp(1.4rem, 1rem + 1.4vw, 2.4rem); line-height: 1.1; }
         .fund-topo p { font-size: clamp(.9rem, .85rem + .3vw, 1.1rem); margin-top: .25rem; }
@@ -1338,14 +1312,15 @@
 
 <body class="antialiased selection:bg-bio-accent selection:text-white">
 
-    <div id="matriz-funcoes" onclick="if(event.target===this) fecharMatrizFuncoes()">
+    <div id="matriz-funcoes" class="rizo-visual-slot">
+      <dialog class="fatores-janela rizo-visual-janela rizo-janela-avulsa" data-rizo-janela>
         <div class="matriz-painel">
             <div class="flex items-center justify-between gap-4 mb-6">
                 <h2 class="font-display text-3xl md:text-4xl font-bold" style="color:var(--text-head)">Quem faz o quê</h2>
-                <button class="btn-toque btn-limpar" onclick="fecharMatrizFuncoes()"><i class="fas fa-times mr-2"></i> Fechar</button>
             </div>
             <div id="matriz-funcoes-body"></div>
         </div>
+      </dialog>
     </div>
 
     <div id="lightbox"
@@ -1503,7 +1478,9 @@
     </section>
 
     <section id="view-holobionte" class="view-section bg-bio-dark" style="padding-left:0; padding-right:0;">
-        <div id="root-holobionte"></div>
+        <div class="rizo-visual-slot rizo-holobionte">
+            <dialog class="fatores-janela rizo-visual-janela" data-rizo-janela open><div id="root-holobionte"></div></dialog>
+        </div>
     </section>
 
     <section id="view-wiki" class="view-section bg-bio-dark">
@@ -1516,7 +1493,7 @@
                         <h2 class="font-display text-white font-bold tracking-tight">Wiki de Cepas</h2>
                         <span class="wiki-topo-sub text-gray-400">Manual técnico</span>
                     </div>
-                    <button class="wiki-btn-quem" onclick="abrirMatrizFuncoes()"><i class="fas fa-th"></i><span>Quem faz o quê</span></button>
+                    <button class="wiki-btn-quem" onclick="abrirMatrizFuncoes(this)"><i class="fas fa-expand" aria-hidden="true"></i><span>Quem faz o quê</span></button>
                 </div>
                 <div class="wiki-atlas">
                     <div id="wiki-nav" class="wiki-nav no-scrollbar" role="tablist" aria-label="Grupos microbianos"></div>
@@ -1564,6 +1541,7 @@
 
                             <div id="spotlight-overlay"
                                 class="absolute inset-0 z-20 opacity-0 transition-opacity duration-500"></div>
+                            <svg id="pgpr-animacao" viewBox="0 0 160 196.8" aria-hidden="true"></svg>
 
                             <button onclick="resetPanel()"
                                 class="absolute top-4 right-4 z-40 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-2 rounded-full transition-all opacity-0 pointer-events-none transform scale-90 hover:scale-100 shadow-xl"
@@ -1982,9 +1960,10 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div class="lab-visualizacao">
+            <div class="lab-opcoes grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <div class="glass-panel p-4 rounded-xl border-l-4 border-blue-500">
-                    <label class="tech-label text-blue-400">Eixo X (Ambiente)</label>
+                    <label for="axisX" class="tech-label text-blue-400">Eixo X (Ambiente)</label>
                     <select id="axisX"
                         class="bg-black/30 text-white text-sm font-bold rounded-lg w-full p-2 outline-none border border-white/10 focus:border-blue-500 transition-colors cursor-pointer"
                         onchange="updateBubbleChart()">
@@ -1994,7 +1973,7 @@
                 </div>
 
                 <div class="glass-panel p-4 rounded-xl border-l-4 border-purple-500">
-                    <label class="tech-label text-purple-400">Eixo Y (Agronômico)</label>
+                    <label for="axisY" class="tech-label text-purple-400">Eixo Y (Agronômico)</label>
                     <select id="axisY"
                         class="bg-black/30 text-white text-sm font-bold rounded-lg w-full p-2 outline-none border border-white/10 focus:border-purple-500 transition-colors cursor-pointer"
                         onchange="updateBubbleChart()">
@@ -2005,7 +1984,7 @@
                 </div>
 
                 <div class="glass-panel p-4 rounded-xl border-l-4 border-green-500">
-                    <label class="tech-label text-green-400">Raio (Mecanismo)</label>
+                    <label for="axisR" class="tech-label text-green-400">Raio (Mecanismo)</label>
                     <select id="axisR"
                         class="bg-black/30 text-white text-sm font-bold rounded-lg w-full p-2 outline-none border border-white/10 focus:border-green-500 transition-colors cursor-pointer"
                         onchange="updateBubbleChart()">
@@ -2021,7 +2000,7 @@
                 <div
                     class="glass-panel p-4 rounded-xl border-l-4 border-red-500 bg-gradient-to-br from-red-900/10 to-transparent">
                     <div class="flex justify-between items-center mb-2">
-                        <label class="tech-label text-red-400 mb-0">Stress Ambiental</label>
+                        <label for="stressSlider" class="tech-label text-red-400 mb-0">Stress Ambiental</label>
                         <span id="stressValue"
                             class="text-xs font-mono font-bold text-red-300 bg-red-500/20 px-2 rounded">0%</span>
                     </div>
@@ -2060,6 +2039,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </section>
     <script src="assets/data/bioData.js"></script>
@@ -2161,6 +2141,7 @@
 
         // --- Navigation ---
         function switchView(viewId) {
+            window.rizoAbaAtual = viewId;
             document.querySelectorAll('.view-section').forEach(el => { el.classList.remove('active-view'); el.style.display = 'none'; });
             document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
 
@@ -2171,6 +2152,7 @@
             document.querySelectorAll('.nav-mob').forEach(b => b.classList.toggle('ativo', b.dataset.view === viewId));
             window.scrollTo(0, 0);
             ajustarAlturas();
+            window.dispatchEvent(new CustomEvent('rizo-aba', { detail: viewId }));
         }
 
         // --- Altura útil: mede o cabeçalho real (barra + linha de ícones) e publica em CSS e para os iframes ---
@@ -2199,19 +2181,9 @@
 
 
         // --- Modo tela (tela interativa do Dia de Campo) ---
-        const TEMPO_OCIOSO_MS = 3 * 60 * 1000;
-        let timerOcioso = null;
-        function voltarParaInicio() {
-            try { fecharMatrizFuncoes(); } catch (e) {}
-            try { closeLightbox(); } catch (e) {}
-            (window.switchView || switchView)('hero');
-            window.scrollTo(0, 0);
-        }
         function reiniciarTimerOcioso() {
-            clearTimeout(timerOcioso);
-            if (document.documentElement.classList.contains('modo-tela')) timerOcioso = setTimeout(voltarParaInicio, TEMPO_OCIOSO_MS);
+            window.rizoQuiosque?.atividade();
         }
-        ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev => document.addEventListener(ev, reiniciarTimerOcioso, { passive: true }));
         function aplicarModoTela(ativo) {
             document.documentElement.classList.toggle('modo-tela', ativo);
             try { localStorage.setItem('modoTela', ativo ? '1' : '0'); } catch (e) {}
@@ -2401,6 +2373,7 @@
 
             if (activeId === data.id) { resetPanel(); return; }
             activeId = data.id;
+            mostrarAnimacaoPGPR(data.id);
 
             title.innerHTML = data.title;
             tag.innerHTML = data.type;
@@ -2439,6 +2412,7 @@
 
         function resetPanel() {
             activeId = null;
+            mostrarAnimacaoPGPR(null);
             const overlay = document.getElementById('spotlight-overlay');
             const btnReset = document.getElementById('btn-reset-view');
             const panelDefault = document.getElementById('panel-default');
@@ -2881,29 +2855,31 @@
             window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - navH - 12, behavior: 'smooth' });
         }
 
-        function abrirMatrizFuncoes() {
-            const el = document.getElementById('matriz-funcoes');
+        function abrirMatrizFuncoes(ancora = document.activeElement) {
+            const el = document.querySelector('#matriz-funcoes .matriz-painel');
             const body = document.getElementById('matriz-funcoes-body');
             const simbolo = v => v === 2 ? '<span class="mz-dot mz-dot-principal" title="Função principal"></span>' : v === 1 ? '<span class="mz-dot mz-dot-secundaria" title="Função secundária"></span>' : '';
             body.innerHTML = `
                 <table class="matriz-tabela">
-                    <thead><tr><th>Grupo</th>${FUNCOES_LABELS_LONGOS.map(l => `<th>${l}</th>`).join('')}</tr></thead>
+                    <thead><tr><th>Grupo</th>${FUNCOES_LABELS_LONGOS.map((l, i) => `<th data-mz-col="${i}"><button type="button" data-mz-foco-col="${i}" aria-pressed="false">${l}</button></th>`).join('')}</tr></thead>
                     <tbody>
                         ${Object.keys(bioData).map(k => {
                             const d = bioData[k];
-                            return `<tr onclick="fecharMatrizFuncoes(); switchView('wiki'); loadWiki('${k}');">
-                                <td class="mz-nome"><span class="mz-cor" style="background:${d.colors.main}"></span>${d.name}<br>${seloEvidencia(d, true)}</td>
-                                ${(d.funcoes || []).map(v => `<td class="mz-cel">${simbolo(v)}</td>`).join('')}
+                            return `<tr data-mz-linha="${k}">
+                                <td class="mz-nome"><div class="mz-cab-grupo"><button type="button" data-mz-foco-linha="${k}" aria-pressed="false"><span class="mz-cor" style="background:${d.colors.main}"></span>${d.name}</button>
+                                <button class="mz-ficha" type="button" data-mz-ficha="${k}" aria-label="Abrir ficha de ${d.name}" title="Abrir ficha"><i class="fas fa-arrow-right" aria-hidden="true"></i></button></div>${seloEvidencia(d, true)}</td>
+                                ${(d.funcoes || []).map((v, i) => `<td class="mz-cel" data-mz-col="${i}">${simbolo(v)}</td>`).join('')}
                             </tr>`;
                         }).join('')}
                     </tbody>
                 </table>
-                <p class="matriz-legenda"><span class="mz-dot mz-dot-principal mz-dot-sm"></span> função principal &nbsp;&nbsp;&nbsp; <span class="mz-dot mz-dot-secundaria mz-dot-sm"></span> função secundária &nbsp;&nbsp;&nbsp; vazio = não é função do grupo. Toque em um grupo para abrir a ficha.</p>`;
-            el.classList.add('aberto');
+                <p class="matriz-legenda"><span class="mz-dot mz-dot-principal mz-dot-sm"></span> função principal &nbsp;&nbsp;&nbsp; <span class="mz-dot mz-dot-secundaria mz-dot-sm"></span> função secundária &nbsp;&nbsp;&nbsp; vazio = não é função do grupo. Toque no mesmo grupo ou função para voltar à visão geral.</p>`;
+            prepararMatrizWiki(body);
+            avancarComJanelaRizo(el, { titulo: 'Quem faz o quê', avulsa: true }).abrir(ancora);
         }
 
-        function fecharMatrizFuncoes() {
-            document.getElementById('matriz-funcoes').classList.remove('aberto');
+        function fecharMatrizFuncoes(depois) {
+            document.querySelector('#matriz-funcoes dialog').rizoExpansao?.fechar(depois);
         }
 
         function abrirListaComparar() {
@@ -2912,6 +2888,7 @@
         }
 
         function setCompare(key) {
+            limparFocoRadarWiki();
             window.wikiCompareKey = key;
             const box = document.getElementById('comparar-lista');
             if (box) box.classList.add('hidden');
@@ -2953,6 +2930,7 @@
         function setRadarModo(modo) {
             window.wikiRadarModo = modo;
             window.wikiAgenteDestaque = null;
+            limparFocoRadarWiki();
             desenharGraficoFuncoes();
         }
 
@@ -2966,7 +2944,6 @@
             const d = bioData[key];
             const ctx = document.getElementById('wikiChartCanvas');
             if (!ctx || !d || !d.funcoes) return;
-            if (currentWikiChart) currentWikiChart.destroy();
 
             const isLight = document.documentElement.classList.contains('light-mode');
             const telaGrande = document.documentElement.classList.contains('modo-tela');
@@ -3050,12 +3027,12 @@
             }
 
             const visiveis = datasets.filter(ds => ds.label !== '__silhueta').length;
-            currentWikiChart = new Chart(ctx, {
+            const config = {
                 type: 'radar',
                 data: { labels, datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    animation: { duration: 500 },
+                    animation: { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 380, easing: 'easeInOutCubic' },
                     plugins: {
                         legend: {
                             display: visiveis > 1, position: 'bottom',
@@ -3067,8 +3044,8 @@
                         r: {
                             min: 0, max: rMax,
                             grid: { color: gridColor },
-                            angleLines: { color: gridColor },
-                            pointLabels: { color: textColor, font: { size: telaGrande ? 22 : 18, weight: '700' } },
+                            angleLines: { color: info => corDoEixoWiki(info.index, gridColor, modoAlvos, true) },
+                            pointLabels: { color: info => corDoEixoWiki(info.index, textColor, modoAlvos), font: { size: telaGrande ? 22 : innerWidth < 600 ? 13 : 18, weight: '700' } },
                             ticks: {
                                 stepSize: 1, color: isLight ? '#475569' : '#94a3b8', backdropColor: 'transparent',
                                 font: { size: telaGrande ? 15 : 13 },
@@ -3076,8 +3053,10 @@
                             }
                         }
                     }
-                }
-            });
+                },
+                plugins: [interacaoEixosWiki]
+            };
+            currentWikiChart = atualizarRadarWiki(ctx, currentWikiChart, config, modoAlvos);
             window.currentWikiChartRef = currentWikiChart;
         }
 
@@ -3127,6 +3106,7 @@
             const content = document.getElementById('wiki-content');
             if (!content || !d) return;
             if (window.currentWikiKey !== key) {
+                limparFocoRadarWiki();
                 window.wikiCompareKey = null;
                 window.wikiRadarModo = d.alvos ? 'alvos' : 'funcoes';
                 window.wikiAgenteDestaque = null;
@@ -3134,7 +3114,12 @@
             if (!d.alvos) window.wikiRadarModo = 'funcoes';
             window.currentWikiKey = key;
 
-            document.querySelectorAll('.wiki-nav-btn').forEach(b => { const on = b.id === `wiki-btn-${key}`; b.classList.toggle('wiki-nav-ativo', on); b.setAttribute('aria-selected', on); if (on && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
+            document.querySelectorAll('.wiki-nav-btn').forEach(b => {
+                const on = b.id === `wiki-btn-${key}`;
+                b.classList.toggle('wiki-nav-ativo', on);
+                b.setAttribute('aria-selected', on);
+                if (on) posicionarBotaoWiki(b);
+            });
             content.style.borderTopColor = d.colors.main;
             content.scrollTop = 0;
 
@@ -3145,13 +3130,13 @@
 
             // 1. Primeira tela: imagem inteira (sem corte) + ficha curta
             const foto = document.getElementById('wiki-foto');
-            if (foto) foto.innerHTML = colonia ? `
+            if (foto) atualizarFotoWiki(foto, key, colonia ? `
                 <div class="wiki-foto-fundo" style="background-image:url('${colonia}')"></div>
                 <button class="wiki-foto-btn" onclick="openLightbox('${colonia}', '${d.name.replace(/'/g, "\\'")}')" aria-label="Ampliar imagem de ${d.name}">
                     <img src="${colonia}" alt="${d.name}" class="wiki-foto-img">
                 </button>
                 ${SELO_ILUSTRATIVA}
-                <span class="wiki-foto-zoom"><i class="fas fa-search-plus"></i></span>` : `<div class="wiki-foto-vazia" style="background:${d.colors.main}22"></div>`;
+                <span class="wiki-foto-zoom"><i class="fas fa-search-plus"></i></span>` : `<div class="wiki-foto-vazia" style="background:${d.colors.main}22"></div>`);
             const info = document.getElementById('wiki-info');
             if (info) {
                 const fx = (d.funcoes || []).map((v, i) => ({ v, i })).filter(f => f.v > 0).sort((a, b) => b.v - a.v);
@@ -3198,14 +3183,14 @@
                     <button id="radar-aba-alvos" class="btn-toque radar-aba" onclick="setRadarModo('alvos')"><i class="fas fa-bullseye mr-2"></i> ${d.alvos.titulo}</button>
                     <button id="radar-aba-funcoes" class="btn-toque radar-aba" onclick="setRadarModo('funcoes')"><i class="fas fa-seedling mr-2"></i> Funções na planta</button>
                 </div>` : ''}
-                <div class="w-full h-[440px] relative"><canvas id="wikiChartCanvas"></canvas></div>
+                <div class="radar-desenho w-full h-[440px] relative"><canvas id="wikiChartCanvas"></canvas></div>
                 <p id="radar-legenda-cinza" class="radar-legenda"><span class="radar-amostra"></span> Área cinza: o que os ${Object.keys(bioData).length} grupos da Wiki fazem juntos. Nenhum grupo faz tudo.</p>
                 ${d.alvos ? htmlTabelaAlvos(d) : ''}
                 ${d.notaFuncoes ? `<p id="radar-nota-funcoes" class="text-gray-300 text-base mt-4 leading-relaxed"><i class="fas fa-info-circle mr-2" style="color:${d.colors.main}"></i>${d.notaFuncoes}</p>` : ''}
                 <div id="radar-botoes-funcoes" class="flex flex-wrap gap-4 mt-6">
                     <button class="btn-toque btn-comparar" onclick="abrirListaComparar()"><i class="fas fa-layer-group mr-2"></i> Comparar com…</button>
                     <button id="btn-limpar-comparar" class="btn-toque btn-limpar ${window.wikiCompareKey ? '' : 'hidden'}" onclick="setCompare(null)"><i class="fas fa-times mr-2"></i> Limpar comparação</button>
-                    <button class="btn-toque btn-limpar" onclick="abrirMatrizFuncoes()"><i class="fas fa-th mr-2"></i> Quem faz o quê</button>
+                    <button class="btn-toque btn-limpar" onclick="abrirMatrizFuncoes(this)"><i class="fas fa-expand mr-2"></i> Quem faz o quê</button>
                 </div>
                 <div id="comparar-lista" class="hidden grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
                     ${outros.map(k => `<button class="btn-toque btn-org" style="border-color:${bioData[k].colors.main}" onclick="setCompare('${k}')"><span class="mz-cor" style="background:${bioData[k].colors.main}"></span>${bioData[k].name}</button>`).join('')}
@@ -3367,8 +3352,11 @@
                 </div>
             </details>`;
 
+            const radarAnterior = content.querySelector('.radar-desenho');
             content.innerHTML = html;
+            if (radarAnterior) content.querySelector('.radar-desenho')?.replaceWith(radarAnterior);
 
+            prepararRadarWiki();
             setTimeout(() => {
                 desenharGraficoFuncoes();
 
@@ -3661,8 +3649,11 @@
         };
     </script>
 
-    <script src="js/holobionte.compiled.js?v=20261125b" defer></script>
-    <script src="js/fatores-janela.js?v=20261125c"></script>
+    <script src="js/holobionte.compiled.js?v=20261125d" defer></script>
+    <script src="js/fatores-janela.js?v=20261125d"></script>
+    <script src="js/imersao.js?v=20261125d"></script>
+    <script src="js/quiosque.js?v=20261125d"></script>
+    <script src="js/pgpr-animacao.js?v=20261125d"></script>
 
     <script>
         // Desabilitar clique direito
@@ -3783,11 +3774,14 @@
             window.switchView = function (view) {
                 // Executa a troca visual normal
                 if (oldSwitch) oldSwitch(view);
+                carregarIframesRizo(view);
+            };
 
+            function carregarIframesRizo(view, preCarregar = false) {
                 const isLight = document.documentElement.classList.contains('light-mode');
 
                 // Carrega o simulador na aba Fatores (antes ficava no Lab, que some no modo tela)
-                if (view === 'factors') {
+                if (view === 'factors' && !preCarregar) {
                     if (!window.simuladorFatoresFrame) {
                         const container = document.getElementById('simulador-fatores-container');
                         container.innerHTML = ''; // Limpa anterior
@@ -3821,7 +3815,7 @@
                     if (a && !a.dataset.loaded) {
                         a.dataset.loaded = "true";
                         const f2 = document.createElement("iframe");
-                        f2.src = "analytics.html?v=20261125c";
+                        f2.src = "analytics.html?v=20261125d";
                         f2.title = 'Fatores';
                         f2.style.width = "100%";
                         f2.style.height = "1400px";
@@ -3847,19 +3841,21 @@
                     if (m && !m.dataset.loaded) {
                         m.dataset.loaded = "true";
                         const f3 = document.createElement("iframe");
-                        f3.src = "mecanismos.html?v=20261125b";
+                        f3.src = "mecanismos.html?v=20261125d";
+                        f3.title = 'Mecanismos de Ação';
                         f3.style.width = "100%";
                         f3.style.height = "900px";
                         f3.style.border = "none";
                         f3.style.background = "transparent";
                         f3.onload = () => { if (isLight) f3.contentWindow.postMessage('force-light', '*'); };
                         window.addEventListener('message', (ev) => {
-                            if (ev.source === f3.contentWindow && ev.data && ev.data.rizoAltura) f3.style.height = (ev.data.rizoAltura + 8) + 'px';
+                            if (!janelaMecanismos.expandida && ev.source === f3.contentWindow && ev.data && ev.data.rizoAltura) f3.style.height = (ev.data.rizoAltura + 8) + 'px';
                         });
-                        m.appendChild(f3);
+                        const janelaMecanismos = montarJanelaFatores(m, f3, 'Mecanismos de Ação');
                     }
                 }
-            };
+            }
+            window.carregarIframesRizo = carregarIframesRizo;
 
         });
     </script>

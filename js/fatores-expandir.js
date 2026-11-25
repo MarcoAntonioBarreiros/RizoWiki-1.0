@@ -45,16 +45,7 @@ function criarExpansaoGraficos({ renderizar, limparDica, aoRestaurar }) {
   const observador = new ResizeObserver(agendarRedimensionamento);
 
   function animar(inversa) {
-    const { origem } = estado;
-    const r = modal.getBoundingClientRect();
-    const deslocamento = {
-      transform: `translate(${origem.left - r.left}px, ${origem.top - r.top}px) scale(${origem.width / r.width}, ${origem.height / r.height})`
-    };
-    const destino = { transform: 'none' };
-    const animacao = modal.animate(inversa ? [destino, deslocamento] : [deslocamento, destino], {
-      duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350,
-      easing: 'cubic-bezier(.22,.68,.26,1)', fill: 'both'
-    });
+    const animacao = animarJanelaRizo(modal, estado.origem, inversa);
     return animacao.finished.then(() => animacao.cancel());
   }
 
