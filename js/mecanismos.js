@@ -75,14 +75,28 @@ function montar() {
 const caixa = document.getElementById('mec');
 const pop = document.getElementById('pop-raiz');
 let sel = null;
-function desenhar() {
+// altura útil da tela do index (sem o cabeçalho); chega por postMessage. Sem ela, um valor de notebook.
+let telaUtil = 700, modoTela = false;
+const LIMITE_VERTICAL = 720;   // abaixo desta largura: versão vertical contextual (celular, tablet estreito)
+
+// largura aproximada de um texto, para escolher a fonte que cabe na caixa
+const larguraTexto = (t, f) => t.length * f * .56;
+
+// ---------- versão completa: Sankey horizontal em pixels reais (1 unidade = 1 px), altura pela tela ----------
+function desenhar(W) {
   const { oOrd, mOrd } = montar();
-  const W = 1000, passo = 54, T = 34, H = T + mOrd.length * passo + 10;
+  const nMax = Math.max(PROB.length, oOrd.length, mOrd.length);
+  const disponivel = telaUtil - (modoTela ? 215 : 190);           // título, instrução e legenda ficam na mesma tela
+  const passo = Math.max(40, Math.min(modoTela ? 70 : 62, (disponivel - 40) / nMax));
+  const T = 28, H = Math.round(T + nMax * passo + 8);
+  const hNo = Math.min(modoTela ? 46 : 40, passo - 6);
+  const fBase = modoTela ? 16 : (W >= 1100 ? 14.5 : 13.5);
+  const wLado = Math.round(Math.max(176, Math.min(260, W * .215))), wOrg = Math.round(Math.max(150, Math.min(210, W * .17)));
   const nos = {};
-  const yCol = (n, i) => T + (H - T - 10) * (i + .5) / n;
-  PROB.forEach((p, i) => nos[p.id] = { id: p.id, nome: p.nome, ic: p.ic, col: 0, x: 20, w: 210, y: yCol(PROB.length, i), cor: '#94a3b8' });
-  oOrd.forEach((o, i) => nos['g:' + o] = { id: 'g:' + o, nome: o, col: 1, x: 410, w: 180, y: yCol(oOrd.length, i), cor: ORG[o] });
-  mOrd.forEach((m, i) => nos[m] = { id: m, nome: MEC[m], col: 2, x: 770, w: 210, y: yCol(mOrd.length, i), cor: '#94a3b8' });
+  const yCol = (n, i) => T + (H - T - 8) * (i + .5) / n;
+  PROB.forEach((p, i) => nos[p.id] = { id: p.id, nome: p.nome, ic: p.ic, col: 0, x: 1, w: wLado, y: yCol(PROB.length, i), cor: '#94a3b8' });
+  oOrd.forEach((o, i) => nos['g:' + o] = { id: 'g:' + o, nome: o, col: 1, x: Math.round((W - wOrg) / 2), w: wOrg, y: yCol(oOrd.length, i), cor: ORG[o] });
+  mOrd.forEach((m, i) => nos[m] = { id: m, nome: MEC[m], col: 2, x: W - wLado - 1, w: wLado, y: yCol(mOrd.length, i), cor: '#94a3b8' });
   // segmentos únicos (o mesmo trecho pode servir a vários caminhos)
   const seg = {};
   FLUXOS.forEach((f, k) => {
@@ -90,19 +104,21 @@ function desenhar() {
   });
   Object.values(seg).forEach(s => s.pend = s.ks.every(k => FLUXOS[k][5] === 'pendente'));
   const curva = s => { const x0 = s.a.x + s.a.w, x1 = s.b.x, mx = (x0 + x1) / 2; return `M${x0},${s.a.y} C${mx},${s.a.y} ${mx},${s.b.y} ${x1},${s.b.y}`; };
-  let g = `<svg class="sk" viewBox="0 0 ${W} ${H}" role="img" aria-label="Diagrama: problema, microrganismo e mecanismo">
-    <text x="20" y="16" class="col-tit">PROBLEMA NO CAMPO</text><text x="500" y="16" class="col-tit" text-anchor="middle">MICRORGANISMO</text><text x="980" y="16" class="col-tit" text-anchor="end">MECANISMO</text>`;
+  let g = `<svg class="sk" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Diagrama: problema, microrganismo e mecanismo">
+    <text x="2" y="14" class="col-tit">PROBLEMA NO CAMPO</text><text x="${W / 2}" y="14" class="col-tit" text-anchor="middle">MICRORGANISMO</text><text x="${W - 2}" y="14" class="col-tit" text-anchor="end">MECANISMO</text>`;
   Object.entries(seg).forEach(([id, s]) => {
-    g += `<g class="lig" data-ks="${s.ks.join(',')}"><path d="${curva(s)}" fill="none" stroke="${s.cor}" stroke-width="4" stroke-linecap="round" ${s.pend ? 'stroke-dasharray="7 6"' : ''} class="v"/>
-      <path d="${curva(s)}" fill="none" stroke="transparent" stroke-width="18" class="alvo"/></g>`;
+    g += `<g class="lig" data-ks="${s.ks.join(',')}"><path d="${curva(s)}" fill="none" stroke="${s.cor}" stroke-width="${modoTela ? 5 : 4}" stroke-linecap="round" ${s.pend ? 'stroke-dasharray="7 6"' : ''} class="v"/>
+      <path d="${curva(s)}" fill="none" stroke="transparent" stroke-width="20" class="alvo"/></g>`;
   });
   Object.values(nos).forEach(n => {
-    const h = 38, ks = FLUXOS.map((f, k) => [f, k]).filter(([f]) => f[0] === n.id || 'g:' + f[1] === n.id || f[2] === n.id).map(([, k]) => k);
+    const ks = FLUXOS.map((f, k) => [f, k]).filter(([f]) => f[0] === n.id || 'g:' + f[1] === n.id || f[2] === n.id).map(([, k]) => k);
     const corBorda = n.col === 1 ? n.cor : 'var(--chip-b)';
+    const xt = n.col === 1 ? n.x + 30 : n.x + 14, cabe = n.w - (xt - n.x) - 8;
+    let f = fBase; while (f > 11 && larguraTexto(n.nome, f) > cabe) f -= .5;
     g += `<g class="no" data-id="${esc(n.id)}" data-ks="${ks.join(',')}" tabindex="0" role="button" aria-label="${esc(n.nome)}">
-      <rect x="${n.x}" y="${n.y - h / 2}" width="${n.w}" height="${h}" rx="12" fill="${n.col === 1 ? hexA(n.cor, .18) : 'var(--pill)'}" stroke="${corBorda}" stroke-width="${n.col === 1 ? 2 : 1}"/>
+      <rect x="${n.x}" y="${n.y - hNo / 2}" width="${n.w}" height="${hNo}" rx="12" fill="${n.col === 1 ? hexA(n.cor, .18) : 'var(--pill)'}" stroke="${corBorda}" stroke-width="${n.col === 1 ? 2 : 1}"/>
       ${n.col === 1 ? `<circle cx="${n.x + 16}" cy="${n.y}" r="5.5" fill="${n.cor}"/>` : ''}
-      <text x="${n.col === 1 ? n.x + 30 : n.x + 14}" y="${n.y + 5}" font-size="14" font-weight="700" fill="var(--strong)">${esc(n.nome)}</text></g>`;
+      <text x="${xt}" y="${n.y + f * .36}" font-size="${f}" font-weight="700" fill="var(--strong)">${esc(n.nome)}</text></g>`;
   });
   caixa.innerHTML = g + '</svg>';
   const ligs = caixa.querySelectorAll('.lig'), nosEl = caixa.querySelectorAll('.no');
@@ -122,6 +138,145 @@ function desenhar() {
     a.el.addEventListener('pointerenter', ev => { if (ev.pointerType === 'mouse' && estagio < 2) { acenderFn(a.ks); dicaToque(a.el, 'clique para ver a explicação'); } });
   });
   caixa.querySelector('svg').addEventListener('pointerleave', ev => { if (ev.pointerType === 'mouse' && estagio < 2) limpar(); });
+}
+
+// ---------- versão vertical contextual (celular): um foco por vez, Problema → Microrganismo → Mecanismo de cima para baixo ----------
+// Um toque basta: tocar num item ou numa ligação acende o caminho ali mesmo e mostra a ficha logo abaixo do diagrama.
+const V = { modo: 'prob', foco: 's4', sub: null };
+const MODOS = { prob: 'Problema', org: 'Microrganismo', mec: 'Mecanismo' };
+const ORGS_TODOS = () => [...new Set(FLUXOS.map(f => f[1]))];
+const MECS_TODOS = () => Object.keys(MEC).filter(m => FLUXOS.some(f => f[2] === m));
+const idFoco = () => V.modo === 'prob' ? V.foco : V.modo === 'org' ? 'g:' + V.foco : V.foco;
+const fluxosDoFoco = () => FLUXOS.map((f, k) => [f, k]).filter(([f]) => V.modo === 'prob' ? f[0] === V.foco : V.modo === 'org' ? f[1] === V.foco : f[2] === V.foco).map(([, k]) => k);
+const nomeDe = id => id.startsWith('g:') ? id.slice(2) : (MEC[id] || (PROB.find(p => p.id === id) || {}).nome || id);
+const kssDoNo = (id, ks) => ks.filter(k => { const f = FLUXOS[k]; return f[0] === id || 'g:' + f[1] === id || f[2] === id; });
+
+function desenharVertical() {
+  const ks = fluxosDoFoco();
+  // colunas: os dois níveis que não são o foco, na ordem do caminho (problema → microrganismo → mecanismo)
+  const nivelFoco = V.modo === 'prob' ? 0 : V.modo === 'org' ? 1 : 2;
+  const [cA, cB] = [0, 1, 2].filter(n => n !== nivelFoco);
+  const TIT = ['Problema no campo', 'Microrganismo', 'Mecanismo'];
+  const idNivel = (f, n) => n === 0 ? f[0] : n === 1 ? 'g:' + f[1] : f[2];
+  const colA = [], colB = [];
+  ks.forEach(k => { const f = FLUXOS[k]; const a = idNivel(f, cA), b = idNivel(f, cB); if (!colA.includes(a)) colA.push(a); if (!colB.includes(b)) colB.push(b); });
+  const { oOrd, mOrd } = montar();
+  const ordem = (n) => (a, b) => n === 0 ? PROB.findIndex(p => p.id === a) - PROB.findIndex(p => p.id === b) : n === 1 ? oOrd.indexOf(a.slice(2)) - oOrd.indexOf(b.slice(2)) : mOrd.indexOf(a) - mOrd.indexOf(b);
+  colA.sort(ordem(cA)); colB.sort(ordem(cB));
+  const lista = V.modo === 'prob' ? PROB.map(p => [p.id, p.nome, `<i class="fas ${p.ic}"></i>`]) : V.modo === 'org' ? ORGS_TODOS().map(o => [o, o, `<span class="v-ponto" style="background:${ORG[o]}"></span>`]) : MECS_TODOS().map(m => [m, MEC[m], '']);
+  const noHtml = id => {
+    const org = id.startsWith('g:'), cor = org ? ORG[id.slice(2)] : null, foco = id === idFoco();
+    const prob = PROB.find(p => p.id === id);
+    return `<button class="v-no${org ? ' v-org' : ''}${foco ? ' v-foco' : ''}" data-id="${esc(id)}" style="${org ? `--o:${cor}` : ''}">${org ? '<span class="v-ponto"></span>' : prob ? `<i class="fas ${prob.ic}"></i>` : ''}<span>${esc(nomeDe(id))}</span></button>`;
+  };
+  caixa.innerHTML = `
+    <div class="v-modos" role="tablist" aria-label="Começar por">${Object.entries(MODOS).map(([m, n]) => `<button role="tab" aria-selected="${V.modo === m}" class="v-modo${V.modo === m ? ' on' : ''}" data-modo="${m}">${n}</button>`).join('')}</div>
+    <div class="v-chips">${lista.map(([id, nome, ic]) => `<button class="v-chip${id === V.foco ? ' on' : ''}" data-foco="${esc(id)}">${ic}${esc(nome)}</button>`).join('')}</div>
+    <div class="v-diag">
+      <svg class="v-lig"></svg>
+      <div class="v-topo"><p class="v-tit">${TIT[nivelFoco]}</p>${noHtml(idFoco())}</div>
+      <div class="v-cols">
+        <div class="v-col"><p class="v-tit">${TIT[cA]}</p>${colA.map(noHtml).join('')}</div>
+        <div class="v-col"><p class="v-tit">${TIT[cB]}</p>${colB.map(noHtml).join('')}</div>
+      </div>
+    </div>
+    <div class="v-ficha" id="v-ficha"></div>`;
+  caixa.querySelectorAll('.v-modo').forEach(b => b.onclick = ev => { ev.stopPropagation(); trocarModo(b.dataset.modo); });
+  caixa.querySelectorAll('.v-chip').forEach(b => b.onclick = ev => { ev.stopPropagation(); V.foco = b.dataset.foco; V.sub = null; desenharVertical(); });
+  caixa.querySelectorAll('.v-no').forEach(b => b.onclick = ev => {
+    ev.stopPropagation();
+    const id = b.dataset.id;
+    if (id === idFoco() || (V.sub && V.sub.id === id)) { V.sub = null; } else V.sub = { id, ks: kssDoNo(id, ks), el: b };
+    aplicarSub(ks);
+  });
+  const chipOn = caixa.querySelector('.v-chip.on');
+  if (chipOn) { const tira = chipOn.parentElement; tira.scrollLeft = chipOn.offsetLeft - (tira.clientWidth - chipOn.offsetWidth) / 2; }
+  V.colunas = [cA, cB];
+  ligarVertical(ks);
+  aplicarSub(ks, true);
+}
+function trocarModo(m) {
+  if (V.modo === m) return;
+  // mantém o contexto: o novo foco é o primeiro item ligado ao foco atual
+  const ks = fluxosDoFoco(), col = m === 'prob' ? 0 : m === 'org' ? 1 : 2;
+  V.modo = m; V.sub = null;
+  V.foco = ks.length ? FLUXOS[ks[0]][col] : (m === 'prob' ? PROB[0].id : m === 'org' ? ORGS_TODOS()[0] : MECS_TODOS()[0]);
+  desenharVertical();
+}
+// ligações: o foco desce por um tronco à esquerda e entra em cada item da 1ª coluna; entre as colunas, curvas na cor do microrganismo
+function ligarVertical(ks) {
+  const diag = caixa.querySelector('.v-diag'), svg = caixa.querySelector('.v-lig');
+  if (!diag || !svg) return;
+  const rd = diag.getBoundingClientRect();
+  svg.setAttribute('width', rd.width); svg.setAttribute('height', rd.height); svg.setAttribute('viewBox', `0 0 ${rd.width} ${rd.height}`);
+  const pos = {};
+  caixa.querySelectorAll('.v-no').forEach(b => { const r = b.getBoundingClientRect(); pos[b.dataset.id] = { l: r.left - rd.left, r: r.right - rd.left, cx: r.left - rd.left + r.width / 2, cy: r.top - rd.top + r.height / 2, bot: r.bottom - rd.top }; });
+  const [cA, cB] = V.colunas;
+  const idNivel = (f, n) => n === 0 ? f[0] : n === 1 ? 'g:' + f[1] : f[2];
+  const F = pos[idFoco()], gx = 7;
+  let html = '';
+  // tronco + ramos (neutros; o que conta é o caminho entre as colunas)
+  const ramos = {};
+  ks.forEach(k => { const a = idNivel(FLUXOS[k], cA); (ramos[a] = ramos[a] || []).push(k); });
+  Object.entries(ramos).forEach(([a, lk]) => {
+    const A = pos[a]; if (!F || !A) return;
+    const y0 = F.bot, yc = y0 + 14;
+    const d = `M${F.cx},${y0} C${F.cx},${yc + 6} ${gx},${yc - 6} ${gx},${yc + 18} L${gx},${A.cy - 12} Q${gx},${A.cy} ${A.l},${A.cy}`;
+    html += `<g class="v-l v-ramo" data-ks="${lk.join(',')}"><path d="${d}" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round" class="v"/></g>`;
+  });
+  const seg = {};
+  ks.forEach(k => { const f = FLUXOS[k]; const a = idNivel(f, cA), b = idNivel(f, cB), id = a + '>' + b; (seg[id] = seg[id] || { a, b, ks: [], cor: ORG[f[1]] }).ks.push(k); });
+  Object.values(seg).forEach(s => {
+    const A = pos[s.a], B = pos[s.b]; if (!A || !B) return;
+    const pend = s.ks.every(k => FLUXOS[k][5] === 'pendente'), mx = (A.r + B.l) / 2;
+    const d = `M${A.r},${A.cy} C${mx},${A.cy} ${mx},${B.cy} ${B.l},${B.cy}`;
+    html += `<g class="v-l" data-ks="${s.ks.join(',')}"><path d="${d}" fill="none" stroke="${s.cor}" stroke-width="4" stroke-linecap="round" ${pend ? 'stroke-dasharray="7 6"' : ''} class="v"/><path d="${d}" fill="none" stroke="transparent" stroke-width="22" class="alvo"/></g>`;
+  });
+  svg.innerHTML = html;
+  svg.querySelectorAll('.v-l:not(.v-ramo)').forEach(l => l.onclick = ev => {
+    ev.stopPropagation();
+    const lk = l.dataset.ks.split(',').map(Number);
+    V.sub = (V.sub && V.sub.chave === l.dataset.ks) ? null : { id: null, chave: l.dataset.ks, ks: lk, el: l, titulo: lk.length > 1 ? 'Caminhos deste trecho' : 'Caminho' };
+    aplicarSub(ks);
+  });
+}
+// destaca o que foi tocado e mostra a ficha (todos os caminhos do foco, ou só os do item tocado)
+function aplicarSub(ks, inicial) {
+  const vis = V.sub ? V.sub.ks : ks, set = new Set(vis);
+  caixa.querySelectorAll('.v-l').forEach(l => { const on = l.dataset.ks.split(',').some(k => set.has(+k)); l.classList.toggle('on', !!V.sub && on); l.classList.toggle('off', !!V.sub && !on); });
+  const ativos = new Set(); vis.forEach(k => { const f = FLUXOS[k]; ativos.add(f[0]); ativos.add('g:' + f[1]); ativos.add(f[2]); });
+  caixa.querySelectorAll('.v-no').forEach(b => { b.classList.toggle('off', !!V.sub && !ativos.has(b.dataset.id)); b.classList.toggle('v-tocado', !!V.sub && V.sub.id === b.dataset.id); });
+  const ficha = caixa.querySelector('#v-ficha');
+  const titulo = V.sub ? (V.sub.id ? nomeDe(V.sub.id) : V.sub.titulo) : nomeDe(idFoco());
+  const cor = V.sub && V.sub.id && V.sub.id.startsWith('g:') ? ORG[V.sub.id.slice(2)] : (V.modo === 'org' && !V.sub ? ORG[V.foco] : '#0ea5e9');
+  // atalho de exploração: ver tudo sobre o item tocado (vira o novo foco)
+  let ir = '';
+  if (V.sub && V.sub.id) { const m = V.sub.id.startsWith('g:') ? 'org' : MEC[V.sub.id] ? 'mec' : 'prob'; ir = `<button class="v-ir" data-m="${m}" data-f="${esc(m === 'org' ? V.sub.id.slice(2) : V.sub.id)}">Ver tudo sobre ${esc(nomeDe(V.sub.id))} <i class="fas fa-arrow-right"></i></button>`; }
+  ficha.innerHTML = `<div class="v-cab" style="--c:${cor}"><h3>${esc(titulo)}</h3><p class="sub">${vis.length} ${vis.length > 1 ? 'caminhos' : 'caminho'} na literatura reunida${V.sub ? ' · <button class="v-todos">mostrar todos</button>' : ''}</p>${ir}</div>` +
+    vis.map(k => {
+      const [p, o, m, txt, refs, st] = FLUXOS[k], prob = PROB.find(x => x.id === p).nome;
+      return `<div class="cam" style="--c:${ORG[o]}"><p class="rota"><span>${esc(prob)}</span><i class="fas fa-arrow-down"></i><b>${esc(o)}</b><i class="fas fa-arrow-down"></i><span>${esc(MEC[m])}</span></p>
+        <p class="txt">${esc(txt)}</p>
+        <p class="refs"><span class="st" style="--s:${STATUS[st][1]}">${STATUS[st][0]}</span>${refs.map(r => LINK_REF[r] ? `<a href="${LINK_REF[r]}" target="_blank" rel="noopener">${esc(REF[r])}</a>` : `<span>${esc(REF[r])}</span>`).join('')}</p></div>`;
+    }).join('');
+  const todos = ficha.querySelector('.v-todos'); if (todos) todos.onclick = ev => { ev.stopPropagation(); V.sub = null; aplicarSub(ks); };
+  const bIr = ficha.querySelector('.v-ir'); if (bIr) bIr.onclick = ev => { ev.stopPropagation(); V.modo = bIr.dataset.m; V.foco = bIr.dataset.f; V.sub = null; desenharVertical(); };
+  // resposta no lugar do toque: um aviso junto ao item, apontando para a ficha logo abaixo
+  if (!inicial && V.sub && V.sub.el) dicaToque(V.sub.el, `${vis.length} ${vis.length > 1 ? 'caminhos' : 'caminho'} na ficha abaixo`);
+  else dicaEl.hidden = true;
+}
+
+// ---------- escolhe a versão pela largura disponível e redesenha quando ela muda ----------
+let versao = null, larguraAtual = 0;
+function renderizar(forcar) {
+  const W = Math.floor(caixa.clientWidth);
+  if (!W) return;
+  if (!forcar && W === larguraAtual) return;
+  larguraAtual = W;
+  const nova = W < LIMITE_VERTICAL ? 'vertical' : 'completa';
+  document.documentElement.classList.toggle('mec-vertical', nova === 'vertical');
+  if (nova !== versao) { limpar(); versao = nova; }
+  if (versao === 'vertical') desenharVertical(); else desenhar(W);
 }
 
 // ---------- ciclo de toque: 1º acende · 2º abre o cartão · 3º apaga (mouse: passar = acender, clicar = cartão) ----------
@@ -152,6 +307,7 @@ function tocar(a, tipo) {
 }
 function limpar() {
   pop.innerHTML = ''; sel = null; estagio = 0; dicaEl.hidden = true;
+  if (versao === 'vertical') return;                          // na versão vertical o destaque some só por toque no próprio diagrama
   caixa.querySelectorAll('.on, .off').forEach(e => e.classList.remove('on', 'off'));
 }
 function mostrarPop(ks, el, titulo, cor) {
@@ -179,17 +335,27 @@ document.getElementById('leg').innerHTML = `<span><svg width="34" height="10"><l
   <span><svg width="34" height="10"><line x1="2" y1="5" x2="32" y2="5" stroke="var(--muted)" stroke-width="4" stroke-dasharray="7 6" stroke-linecap="round"/></svg> referência ainda a conferir</span>
   ${Object.values(STATUS).map(([n, c]) => `<span class="st" style="--s:${c}">${n}</span>`).join('')}`;
 
-desenhar();
+renderizar(true);
+let _tR = null;
+addEventListener('resize', () => { clearTimeout(_tR); _tR = setTimeout(() => renderizar(), 120); });
+// a versão vertical mede os botões: redesenha as curvas quando as fontes terminam de carregar
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => renderizar(true));
 
 // ---------- tema e altura (mesma conversa do analytics.html com o index) ----------
 addEventListener('message', ev => {
   const h = document.documentElement;
   if (ev.data === 'toggle-theme') h.classList.toggle('light-mode');
   if (ev.data === 'force-light') h.classList.add('light-mode');
+  if (ev.data && ev.data.rizoTela) {                         // altura útil e modo tela vindos do index
+    const t = ev.data.rizoTela, mudou = Math.abs(t.util - telaUtil) > 4 || !!t.modoTela !== modoTela;
+    telaUtil = t.util; modoTela = !!t.modoTela; h.classList.toggle('modo-tela', modoTela);
+    if (mudou) renderizar(true);
+  }
 });
 try { if (parent !== window && parent.document.documentElement.classList.contains('light-mode')) document.documentElement.classList.add('light-mode'); } catch (_) {}
 if (parent !== window) {
   document.documentElement.classList.add('embutido');
   const enviar = () => { try { parent.postMessage({ rizoAltura: Math.ceil(document.documentElement.scrollHeight) }, '*'); } catch (_) {} };
   new ResizeObserver(enviar).observe(document.body); addEventListener('load', enviar);
+  try { parent.postMessage({ rizoPedeTela: 1 }, '*'); } catch (_) {}   // pede a altura útil ao index
 }

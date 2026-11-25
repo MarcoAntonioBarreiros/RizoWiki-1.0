@@ -383,12 +383,7 @@
             border-bottom-color: rgba(0, 0, 0, 0.05);
         }
 
-        @media (max-width: 768px) {
-            .md\:hidden.transform.translate-y-full {
-                transform: translateY(100%) !important;
-                /* garante que fique fora da viewport */
-            }
-        }
+
 
 
         /* Keyframes RESTAURADOS */
@@ -489,11 +484,7 @@
 
 
         /* Fix logo overlap with top navbar on mobile */
-        @media(max-width:768px) {
-            #view-hero {
-                padding-top: 160px !important;
-            }
-        }
+
 
         /* Increase bubble chart container height on mobile to avoid legend clipping */
         @media(max-width:768px) {
@@ -1094,15 +1085,230 @@
         html.light-mode .logo-ufpr { filter:brightness(0); }
 
         /* ===== Modo tela (tela interativa) ===== */
-        html.modo-tela { font-size:18px; }
         html.modo-tela #nav-lab, html.modo-tela .nav-lab-mobile, html.modo-tela #view-lab { display:none !important; }
         html.modo-tela nav .nav-link { padding:.9rem .4rem; font-size:.8rem; }
         html.modo-tela .numero-destaque { font-size:5.5rem; }
         #btn-tela-cheia { display:none; }
         html.modo-tela #btn-tela-cheia { display:inline-flex; }
         .btn-nav-icone { padding:.55rem; border-radius:999px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.1); color:var(--text-head); display:inline-flex; align-items:center; justify-content:center; min-width:40px; min-height:40px; }
-        html.modo-tela .btn-nav-icone { min-width:52px; min-height:52px; }
         html.modo-tela #btn-modo-tela { background:#0ea5e9; color:#fff; }
+
+        /* ===== Layout de exposição: cabeçalho medido, altura útil, alvos de toque ===== */
+        /* --nav-h e --altura-util são medidos por JS (ajustarAlturas); os valores aqui são o fallback */
+        :root { --nav-h: 80px; --altura-util: calc(100vh - var(--nav-h)); }
+        @supports (height: 100dvh) { :root { --altura-util: calc(100dvh - var(--nav-h)); } }
+        .view-section { padding-top: calc(var(--nav-h) + 12px); min-height: 100vh; min-height: 100dvh; }
+        #view-hero { padding-top: calc(var(--nav-h) + 24px); }
+        .nav-topo { height: 80px; }
+        .nav-logo { height: 2.5rem; }
+        .nav-desk { gap: clamp(1.1rem, 2.2vw, 2.5rem); }
+        .nav-acoes { gap: .6rem; }
+        .btn-nav-icone { min-width: 44px; min-height: 44px; }
+
+        /* celular e tablet em pé: barra de cima baixa + linha de ícones com rótulo */
+        .nav-mobile { display: flex; justify-content: space-around; align-items: stretch; background: var(--bg-panel); border-top: 1px solid rgba(255,255,255,.05); }
+        .nav-mob { flex: 1 1 0; min-width: 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #64748b; font-size: 10px; font-weight: 700; letter-spacing: .02em; position: relative; padding: 4px 0; }
+        .nav-mob i { font-size: 16px; }
+        .nav-mob .rot-longo { display: none; }
+        .nav-mob.ativo { color: #0ea5e9; }
+        .nav-mob.ativo::before { content: ''; position: absolute; top: 0; left: 18%; right: 18%; height: 3px; border-radius: 0 0 3px 3px; background: #0ea5e9; box-shadow: 0 2px 8px rgba(14,165,233,.6); }
+        @media (min-width: 600px) { .nav-mob .rot-curto { display: none; } .nav-mob .rot-longo { display: inline; } .nav-mob { font-size: 11px; } }
+        @media (max-width: 1023px) {
+            .nav-topo { height: 56px; }
+            .nav-logo { height: 2rem; }
+            .nav-topo .font-display.text-xl { font-size: 1.05rem; }
+            .nav-acoes { gap: .4rem; }
+        }
+        @media (min-width: 1024px) { .nav-mobile { display: none; } }
+        /* telas baixas em pé (celular deitado): cabeçalho ainda menor */
+        @media (max-width: 1023px) and (max-height: 500px) {
+            .nav-topo { height: 44px; }
+            .nav-mob { min-height: 40px; flex-direction: row; gap: 5px; }
+            .nav-mob .rot-curto, .nav-mob .rot-longo { display: none; }
+        }
+
+        /* Modo tela: compõe para tela grande vista de pé (não só aumenta a letra).
+           A letra cresce só em tela larga; em celular/tablet com o modo ligado vale o layout pequeno. */
+        @media (min-width: 1024px) {
+            html.modo-tela { font-size: max(18px, .9375vw); }
+            html.modo-tela .nav-topo { height: 88px; }
+            html.modo-tela .btn-nav-icone { min-width: 52px; min-height: 52px; }
+        }
+        html.modo-tela .nav-mob { min-height: 52px; }
+
+        /* ===== Holobionte: vídeo-mapa protagonista ===== */
+        #view-holobionte { padding-top: var(--nav-h) !important; padding-bottom: 0 !important; }
+        .holo-raiz { height: var(--altura-util); padding: 10px 16px 14px; }
+        .holo-topo { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .holo-topo-lado { flex-direction: column; align-items: flex-start; gap: 8px; }
+        .holo-h1 { font-size: clamp(1.15rem, 1.1rem + 1vw, 2rem); line-height: 1.2; padding-bottom: 2px; }
+        .holo-filtros { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+        .holo-topo-lado > div:first-child { flex: 0 1 auto; }
+        .holo-topo-lado .holo-filtros { flex: 0 1 auto; min-width: 0; max-width: 100%; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+        .holo-topo-lado .holo-filtros::-webkit-scrollbar { display: none; }
+        @media (max-height: 500px) { .holo-raiz { padding-top: 6px; padding-bottom: 6px; } .holo-topo { margin-bottom: 6px; } .holo-chip { min-height: 34px; padding: .3rem .7rem; } }
+        /* tela baixa e larga (celular deitado): título inteiro e chips na mesma linha, rolando de lado — sobra altura para o mapa */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .holo-topo-lado { flex-direction: row; align-items: center; gap: 12px; }
+            .holo-topo-lado > div:first-child { flex: 0 0 auto; }
+            .holo-topo-lado .holo-h1 { white-space: nowrap; }
+            .holo-topo-lado .holo-filtros { flex: 1 1 0; }
+        }
+        .holo-filtros-faixa { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px 4px; }
+        .holo-filtros-faixa::-webkit-scrollbar { display: none; }
+        .holo-chip { padding: .45rem .9rem; border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; min-height: 40px; flex: 0 0 auto; }
+        .holo-btn { min-width: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; transition: background .2s; }
+        .holo-btn:hover { background: rgba(148,163,184,.18); }
+        .holo-area { position: relative; }
+        .holo-no { padding: 0; background: none; border: 0; cursor: pointer; transition: opacity .4s, filter .4s; }
+        .holo-no.holo-apagado { opacity: .3; filter: grayscale(1); }
+        .holo-rotulo { padding: .2em .6em; line-height: 1.25; }
+        .holo-fluxo { animation: holoFluxo 1s linear infinite; }
+        @keyframes holoFluxo { to { stroke-dashoffset: -24; } }
+        .holo-dica { animation: holoDica 2.4s ease-in-out infinite; }
+        @keyframes holoDica { 0%,100% { opacity: .65; } 50% { opacity: 1; } }
+        .holo-pcab { padding: 1.1rem 1.25rem 1rem; }
+        .holo-ptit { font-size: clamp(1.15rem, 1rem + .6vw, 1.6rem); }
+        .holo-psub { font-size: .9rem; }
+        .holo-pcorpo { padding: 1.1rem 1.25rem; }
+        .holo-psec { display: flex; align-items: center; gap: .45rem; font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; margin-bottom: .35rem; }
+        .holo-ptxt { font-size: .95rem; line-height: 1.6; }
+        .holo-det { border: 1px solid rgba(148,163,184,.35); border-left-width: 3px; border-radius: 12px; padding: .65rem .9rem; background: rgba(248,250,252,.6); }
+        .dark .holo-det { background: rgba(15,23,42,.45); border-color: rgba(71,85,105,.5); }
+        .holo-det summary { cursor: pointer; list-style: none; margin: 0; min-height: 28px; }
+        .holo-det summary::-webkit-details-marker { display: none; }
+        .holo-det summary::after { content: '+'; margin-left: auto; font-size: 1.1rem; font-weight: 700; }
+        .holo-det[open] summary::after { content: '–'; }
+        .holo-det[open] summary { margin-bottom: .4rem; }
+        .holo-prod { padding: .35rem .6rem; }
+        .holo-painel-pilha { display: flex; flex-direction: column; min-height: 0; }
+        .holo-folha { position: fixed; left: 0; right: 0; bottom: 0; height: 82vh; height: 82dvh; z-index: 60; padding: 0 6px; animation: holoSobe .25s ease-out; }
+        @keyframes holoSobe { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+        .holo-veu { position: fixed; inset: 0; z-index: 55; background: rgba(2,6,23,.45); }
+        @media (max-width: 640px) {
+            .holo-raiz { padding: 8px 10px 10px; }
+            .holo-filtros-faixa { margin: 0 -10px; padding: 2px 10px 4px; }
+            .holo-chip { font-size: .75rem; padding: .4rem .75rem; }
+            .holo-pcab { padding: .8rem .9rem .7rem; }
+            .holo-pcorpo { padding: .8rem .9rem; }
+            .holo-ptxt { font-size: .9rem; }
+            .holo-h1 { font-size: 1.05rem; }
+        }
+        @media (min-width: 1024px) {
+            html.modo-tela .holo-ptxt { font-size: 1.12rem; line-height: 1.65; }
+            html.modo-tela .holo-ptit { font-size: 1.9rem; }
+            html.modo-tela .holo-psub { font-size: 1.05rem; }
+            html.modo-tela .holo-psec { font-size: .8rem; }
+            html.modo-tela .holo-chip { font-size: .85rem; min-height: 48px; }
+        }
+
+        /* ===== Wiki: atlas microbiológico (navegação | imagem | ficha) ===== */
+        .wiki-casca { max-width: 1800px; margin: 0 auto; padding: 0 16px; }
+        .wiki-tela { display: flex; flex-direction: column; height: calc(var(--altura-util) - 12px); min-height: 460px; padding-bottom: 14px; }
+        .wiki-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+        .wiki-topo-tit { display: flex; align-items: baseline; gap: .75rem; min-width: 0; }
+        .wiki-topo-tit h2 { font-size: clamp(1.3rem, 1rem + 1.2vw, 2.2rem); line-height: 1.1; white-space: nowrap; }
+        .wiki-topo-barra { align-self: stretch; width: 5px; border-radius: 99px; background: linear-gradient(#22c55e, #0ea5e9); box-shadow: 0 0 16px rgba(14,165,233,.55); }
+        .wiki-topo-sub { font-size: .75rem; letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+        .wiki-btn-quem { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; padding: .5rem 1rem; border-radius: 999px; font-weight: 700; font-size: .9rem; color: var(--text-head); background: var(--glass-bg); border: 1px solid var(--glass-border); white-space: nowrap; transition: border-color .2s, box-shadow .2s; }
+        .wiki-btn-quem:hover { border-color: #0ea5e9; box-shadow: 0 0 14px rgba(14,165,233,.35); }
+        .wiki-btn-quem i { color: #0ea5e9; }
+
+        .wiki-atlas { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(190px, 20%) minmax(0, 1fr) minmax(300px, 30%); gap: 16px; }
+        .wiki-nav { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 0; padding: 2px; }
+        .wiki-nav-btn { position: relative; display: flex; align-items: center; gap: .7rem; text-align: left; flex: 1 1 0; min-height: 46px; max-height: 88px; padding: .4rem .8rem .4rem .55rem; border-radius: 14px; border-left: 4px solid var(--cor) !important; }
+        .wiki-nav-btn:hover { transform: none; }
+        .wiki-nav-mini { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background-size: cover; background-position: center; box-shadow: 0 0 0 2px var(--cor); box-shadow: 0 0 0 2px var(--cor), 0 0 12px color-mix(in srgb, var(--cor) 55%, transparent); }
+        .wiki-nav-nome { font-weight: 700; font-size: .98rem; line-height: 1.2; letter-spacing: -.01em; }
+        .wiki-nav-btn.wiki-nav-ativo { outline: none; border-color: var(--cor) !important; box-shadow: 0 0 0 2px var(--cor); background: color-mix(in srgb, var(--cor) 16%, var(--glass-bg)); box-shadow: 0 0 0 2px var(--cor), 0 0 22px color-mix(in srgb, var(--cor) 45%, transparent); }
+
+        .wiki-foto { position: relative; border-radius: 22px; overflow: hidden; background: #020617; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 20px 50px rgba(0,0,0,.25); min-height: 0; }
+        .wiki-foto-fundo { position: absolute; inset: -30px; background-size: cover; background-position: center; filter: blur(28px) saturate(1.1) brightness(.55); }
+        .wiki-foto-btn { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; cursor: zoom-in; padding: 0; background: none; border: 0; }
+        .wiki-foto-img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; box-shadow: 0 10px 40px rgba(0,0,0,.45); animation: fadeIn .4s ease-out; }
+        .wiki-foto .selo-ilustrativa { z-index: 2; }
+        .wiki-foto-zoom { position: absolute; left: .75rem; bottom: .75rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.5); color: #fff; font-size: .85rem; pointer-events: none; }
+        .wiki-foto-vazia { position: absolute; inset: 0; }
+
+        .wiki-info { border-radius: 22px; padding: 1.25rem 1.35rem; overflow-y: auto; min-height: 0; border-top: 3px solid var(--cor, #0ea5e9) !important; }
+        .wiki-info-grupo { font-size: .7rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; margin-bottom: .3rem; }
+        .wiki-info-nome { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: clamp(1.5rem, 1rem + 1.3vw, 2.4rem); line-height: 1.08; letter-spacing: -.02em; color: var(--text-head); }
+        .wiki-info-selo { margin: .6rem 0 .8rem; }
+        .wiki-info-selo .selo-evid { font-size: .8rem; padding: .35rem .8rem; }
+        .wiki-info-desc { font-size: 1rem; line-height: 1.6; }
+        .wiki-info-sec { font-size: .7rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; margin: 1.1rem 0 .45rem; }
+        .wiki-info-funcoes { display: flex; flex-direction: column; gap: .35rem; }
+        .wiki-info-funcoes li { display: flex; align-items: center; gap: .55rem; font-weight: 600; font-size: .95rem; }
+        .wiki-info-funcoes small { margin-left: auto; font-size: .72rem; font-weight: 600; }
+        .wiki-info-atalhos { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1.1rem; }
+        .wiki-atalho { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .45rem .9rem; border-radius: 12px; font-weight: 700; font-size: .85rem; color: var(--text-head); border: 1px solid var(--cor, #0ea5e9); background: color-mix(in srgb, var(--cor, #0ea5e9) 12%, transparent); border: 1px solid color-mix(in srgb, var(--cor, #0ea5e9) 45%, transparent); }
+        .wiki-atalho i { color: var(--cor, #0ea5e9); }
+        .wiki-atalho:hover { background: color-mix(in srgb, var(--cor, #0ea5e9) 22%, transparent); }
+        .wiki-corpo { margin-top: 4px; }
+
+        /* tela larga e baixa (notebook 1366×768): ficha um pouco mais estreita */
+        @media (min-width: 1024px) and (max-height: 820px) { .wiki-nav-mini { width: 32px; height: 32px; } .wiki-nav-nome { font-size: .9rem; } .wiki-info-desc { font-size: .93rem; } }
+
+        /* tablet em pé: miniaturas numa coluna estreita ao lado da imagem; ficha embaixo */
+        @media (max-width: 1023px) {
+            .wiki-casca { padding: 0 12px; }
+            .wiki-tela { height: auto; min-height: 0; }
+            .wiki-atlas { grid-template-columns: 108px minmax(0, 1fr); grid-template-rows: auto auto; }
+            .wiki-nav { grid-row: 1; height: min(58vh, 640px); height: min(58dvh, 640px); }
+            .wiki-foto { grid-row: 1; height: min(58vh, 640px); height: min(58dvh, 640px); }
+            .wiki-info { grid-column: 1 / -1; overflow: visible; }
+            .wiki-nav-btn { flex-direction: column; justify-content: center; gap: .25rem; padding: .35rem .2rem; border-left-width: 0 !important; border-top: 3px solid var(--cor) !important; max-height: none; }
+            .wiki-nav-mini { width: 36px; height: 36px; }
+            .wiki-nav-nome { font-size: .62rem; text-align: center; line-height: 1.15; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        }
+        /* celular: faixa horizontal de miniaturas em cima; imagem dominante; ficha embaixo */
+        @media (max-width: 639px) {
+            .wiki-casca { padding: 0 10px; }
+            .wiki-topo { margin-bottom: 8px; }
+            .wiki-topo-sub { display: none; }
+            .wiki-btn-quem { padding: .45rem .8rem; font-size: .8rem; }
+            .wiki-atlas { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+            .wiki-nav { grid-row: auto; height: auto; flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 2px 2px 6px; scroll-snap-type: x proximity; }
+            .wiki-nav-btn { flex: 0 0 92px; min-height: 64px; scroll-snap-align: start; }
+            .wiki-foto { grid-row: auto; height: 46vh; height: 46dvh; min-height: 240px; border-radius: 18px; }
+            .wiki-info { padding: 1rem 1.05rem; }
+            .wiki-corpo { padding: 1.1rem !important; border-radius: 1.4rem !important; }
+        }
+        /* celular deitado: imagem ao lado da ficha */
+        @media (max-width: 1023px) and (max-height: 500px) and (orientation: landscape) {
+            .wiki-atlas { grid-template-columns: 74px minmax(0, 1fr) minmax(0, 1fr); }
+            .wiki-nav, .wiki-foto { height: calc(var(--altura-util) - 70px); }
+            .wiki-info { grid-column: auto; grid-row: 1; height: calc(var(--altura-util) - 70px); overflow-y: auto; }
+        }
+        @media (min-width: 1024px) {
+            html.modo-tela .wiki-info-desc { font-size: 1.05rem; }
+            html.modo-tela .wiki-nav-mini { width: 44px; height: 44px; }
+        }
+
+        /* ===== Fundamentos: título compacto e planta inteira (sem corte) ===== */
+        .fund-topo { margin-bottom: 12px; }
+        .fund-topo h2 { font-size: clamp(1.4rem, 1rem + 1.4vw, 2.4rem); line-height: 1.1; }
+        .fund-topo p { font-size: clamp(.9rem, .85rem + .3vw, 1.1rem); margin-top: .25rem; }
+        #diagram-container { aspect-ratio: 1600 / 1968; height: auto; }
+        #diagram-container > img { object-fit: fill; }
+        .fund-diagrama { width: 100%; max-width: 560px; margin: 0 auto; }
+        html.modo-tela { --fund-topo-h: 88px; }
+        @media (min-width: 1024px) {
+            .fund-diagrama { flex: 0 0 auto; margin: 0; max-width: none; width: calc((var(--altura-util) - 12px - 14px - var(--fund-topo-h, 64px) - 12px - 24px) * 1600 / 1968 + 24px); min-width: 360px; }
+            .fund-bloco { width: fit-content; max-width: 100%; margin: 0 auto; }
+            .fund-bloco > .flex { margin-bottom: 2.5rem; }
+            .fund-bloco .fund-painel { flex: 0 0 auto; width: clamp(340px, 34vw, 680px); min-width: 0; }
+            .fund-painel #panel-default p { max-width: 30em; }
+            .fund-painel #details-panel { overflow-y: auto; justify-content: flex-start; }
+            .fund-painel #panel-default { margin: auto 0; }
+            .fund-painel #panel-title { font-size: clamp(1.4rem, 1rem + .9vw, 2rem); margin-bottom: 1rem; }
+            .fund-painel #panel-desc { font-size: 1rem; }
+        }
+
+        /* ===== Mapa e Lab: cabeçalhos compactos; gráfico do Lab na altura da tela ===== */
+        .mapa-topo h2 { font-size: clamp(1.6rem, 1.1rem + 2vw, 3rem); line-height: 1.1; }
+        .lab-grafico { height: 65vh; min-height: 420px; }
+        @media (min-width: 768px) { .lab-grafico { height: calc(var(--altura-util) - 12px - 100px - 16px - 110px - 16px - 16px); min-height: 380px; } }
     </style>
 </head>
 
@@ -1132,9 +1338,9 @@
 
     <nav
         class="fixed top-0 w-full z-50 bg-[var(--nav-bg)] backdrop-blur-xl border-b border-white/5 shadow-2xl transition-colors duration-300">
-        <div class="container mx-auto px-4 md:px-6 h-20 flex justify-between items-center">
+        <div class="nav-topo container mx-auto px-4 md:px-6 flex justify-between items-center">
             <div class="flex items-center gap-3 cursor-pointer group" onclick="switchView('hero')">
-                <div class="h-10 w-auto flex items-center justify-center overflow-hidden rounded-full">
+                <div class="nav-logo w-auto flex items-center justify-center overflow-hidden rounded-full">
                     <img src="assets/logo fixtec.webp" alt="Fixtec Logo"
                         class="h-full w-auto object-cover scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
                 </div>
@@ -1143,9 +1349,9 @@
                         class="text-bio-leaf">Wiki</span></span>
             </div>
 
-            <div class="flex items-center gap-4 md:gap-8">
+            <div class="nav-acoes flex items-center">
                 <div
-                    class="hidden md:flex gap-6 md:gap-10 text-[10px] md:text-xs font-bold text-gray-500 tracking-[0.15em] items-center">
+                    class="nav-desk hidden lg:flex text-[10px] md:text-xs font-bold text-gray-500 tracking-[0.15em] items-center">
                     <button onclick="switchView('hero')" class="nav-link hover:text-[var(--text-head)] py-2 active"
                         id="nav-hero"><i class="fas fa-home text-lg"></i></button>
                     <button onclick="switchView('holobionte')"
@@ -1180,31 +1386,21 @@
 
                 <button id="btn-tela-cheia" onclick="alternarTelaCheia()" class="btn-nav-icone" title="Tela cheia"><i class="fas fa-expand"></i></button>
                 <button id="btn-modo-tela" onclick="alternarModoTela()" class="btn-nav-icone" title="Modo tela (tela interativa)"><i class="fas fa-tv"></i></button>
-                <button onclick="toggleTheme()"
-                    class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-[var(--text-head)] border border-white/10">
+                <button onclick="toggleTheme()" class="btn-nav-icone" title="Tema claro / escuro">
                     <i class="fas fa-sun hidden dark-icon"></i>
                     <i class="fas fa-moon light-icon"></i>
                 </button>
             </div>
         </div>
-        <div
-            class="md:hidden flex justify-around py-3 bg-[var(--bg-panel)] border-t border-white/5 absolute bottom-0 w-full transform translate-y-full">
-            <button onclick="switchView('hero')" class="text-gray-500 hover:text-bio-accent"><i
-                    class="fas fa-home"></i></button>
-            <button onclick="switchView('holobionte')" class="text-gray-500 hover:text-bio-accent"><i
-                    class="fas fa-network-wired"></i></button>
-            <button onclick="switchView('wiki')" class="text-gray-500 hover:text-bio-accent"><i
-                    class="fas fa-book"></i></button>
-            <button onclick="switchView('fundamentos')" class="text-gray-500 hover:text-bio-gold"><i
-                    class="fas fa-layer-group"></i></button>
-            <button onclick="switchView('mapping')" class="text-gray-500 hover:text-bio-soil"><i
-                    class="fas fa-project-diagram"></i></button>
-            <button onclick="switchView('factors')" class="text-gray-500 hover:text-bio-red"><i
-                    class="fas fa-exclamation-triangle"></i></button>
-            <button onclick="switchView('mecanismos')" class="text-gray-500 hover:text-bio-accent"><i
-                    class="fas fa-diagram-project"></i></button>
-            <button onclick="switchView('lab')" class="nav-lab-mobile text-gray-500 hover:text-bio-leaf"><i
-                    class="fas fa-flask"></i></button>
+        <div class="nav-mobile lg:hidden">
+            <button onclick="switchView('hero')" class="nav-mob ativo" data-view="hero" aria-label="Início"><i class="fas fa-home"></i><span class="rot-curto">Início</span><span class="rot-longo">Início</span></button>
+            <button onclick="switchView('holobionte')" class="nav-mob" data-view="holobionte" aria-label="Holobionte"><i class="fas fa-network-wired"></i><span class="rot-curto">Holo</span><span class="rot-longo">Holobionte</span></button>
+            <button onclick="switchView('wiki')" class="nav-mob" data-view="wiki" aria-label="Wiki"><i class="fas fa-book"></i><span class="rot-curto">Wiki</span><span class="rot-longo">Wiki</span></button>
+            <button onclick="switchView('fundamentos')" class="nav-mob" data-view="fundamentos" aria-label="Fundamentos"><i class="fas fa-layer-group"></i><span class="rot-curto">Fund.</span><span class="rot-longo">Fundamentos</span></button>
+            <button onclick="switchView('mapping')" class="nav-mob" data-view="mapping" aria-label="Mapa"><i class="fas fa-map-signs"></i><span class="rot-curto">Mapa</span><span class="rot-longo">Mapa</span></button>
+            <button onclick="switchView('factors')" class="nav-mob" data-view="factors" aria-label="Fatores"><i class="fas fa-exclamation-triangle"></i><span class="rot-curto">Fatores</span><span class="rot-longo">Fatores</span></button>
+            <button onclick="switchView('mecanismos')" class="nav-mob" data-view="mecanismos" aria-label="Mecanismos"><i class="fas fa-diagram-project"></i><span class="rot-curto">Mecan.</span><span class="rot-longo">Mecanismos</span></button>
+            <button onclick="switchView('lab')" class="nav-mob nav-lab-mobile" data-view="lab" aria-label="Lab"><i class="fas fa-flask"></i><span class="rot-curto">Lab</span><span class="rot-longo">Lab</span></button>
         </div>
     </nav>
 
@@ -1287,44 +1483,44 @@
     </section>
 
     <section id="view-wiki" class="view-section bg-bio-dark">
-        <div class="container mx-auto px-4 md:px-6 h-full flex flex-col">
-            <div class="flex items-center gap-6 mb-10">
-                <div
-                    class="w-2 h-16 bg-gradient-to-b from-bio-leaf to-bio-accent rounded-full shadow-[0_0_30px_rgba(14,165,233,0.6)]">
-                </div>
-                <div>
-                    <h2 class="font-display text-4xl md:text-6xl text-white font-bold tracking-tight">Wiki de Cepas</h2>
-                    <p class="text-gray-400 text-sm md:text-base font-light tracking-widest uppercase">Manual Técnico</p>
-                </div>
-                <button class="btn-toque btn-comparar ml-auto" onclick="abrirMatrizFuncoes()"><i class="fas fa-th mr-2"></i> Quem faz o quê</button>
-            </div>
-
-            <div class="flex flex-col lg:flex-row gap-8 flex-grow overflow-hidden">
-                <div class="w-full lg:w-1/4 flex lg:flex-col gap-4 overflow-x-auto lg:overflow-y-auto pb-4 lg:pb-0 no-scrollbar pr-2 h-full"
-                    id="wiki-nav">
-                </div>
-
-                <div class="w-full lg:w-3/4 relative h-full">
-                    <div class="glass-panel rounded-[2rem] p-6 md:p-12 h-full border-t-[1px] border-white/10 transition-all shadow-2xl custom-scroll overflow-y-auto bg-bio-panel"
-                        id="wiki-content">
+        <div class="wiki-casca">
+            <!-- Primeira tela: atlas em três regiões (navegação | imagem | ficha) -->
+            <div class="wiki-tela">
+                <div class="wiki-topo">
+                    <div class="wiki-topo-tit">
+                        <span class="wiki-topo-barra"></span>
+                        <h2 class="font-display text-white font-bold tracking-tight">Wiki de Cepas</h2>
+                        <span class="wiki-topo-sub text-gray-400">Manual técnico</span>
                     </div>
+                    <button class="wiki-btn-quem" onclick="abrirMatrizFuncoes()"><i class="fas fa-th"></i><span>Quem faz o quê</span></button>
                 </div>
+                <div class="wiki-atlas">
+                    <div id="wiki-nav" class="wiki-nav no-scrollbar" role="tablist" aria-label="Grupos microbianos"></div>
+                    <div id="wiki-foto" class="wiki-foto"></div>
+                    <aside id="wiki-info" class="wiki-info glass-panel custom-scroll"></aside>
+                </div>
+            </div>
+            <!-- Depois da primeira tela: tudo o que já existia (frase de manejo, gráficos, efeitos, estudo, protocolo, detalhes) -->
+            <div class="glass-panel wiki-corpo rounded-[2rem] p-6 md:p-12 border-t-[1px] border-white/10 transition-all shadow-2xl bg-bio-panel"
+                id="wiki-content">
             </div>
         </div>
     </section>
 
     <section id="view-fundamentos" class="view-section bg-bio-dark">
         <div class="container mx-auto px-4 md:px-6">
-            <h2 class="font-display text-4xl md:text-5xl text-white font-bold mb-6">Fundamentos dos Inoculantes</h2>
-            <p class="text-xl text-gray-400 mb-12 max-w-4xl">Fatores básicos que determinam o sucesso da biotecnologia
-                agrícola.</p>
+            <div class="fund-bloco">
+            <div class="fund-topo">
+                <h2 class="font-display text-white font-bold">Fundamentos dos Inoculantes</h2>
+                <p class="text-gray-400">Fatores básicos que determinam o sucesso da biotecnologia agrícola.</p>
+            </div>
 
-            <div class="flex flex-col lg:flex-row gap-8 mb-16 items-stretch">
+            <div class="flex flex-col lg:flex-row gap-6 mb-16 items-stretch">
 
-                <div class="w-full lg:w-7/12 relative">
+                <div class="fund-diagrama relative">
                     <div
                         class="w-full bg-[#0b1221] border-4 border-white/5 rounded-2xl p-2 shadow-[0_0_50px_rgba(34,197,94,0.1)] h-full relative overflow-hidden">
-                        <div class="absolute top-6 left-0 right-0 z-20 text-center pointer-events-none">
+                        <div class="absolute bottom-6 left-0 right-0 z-20 text-center pointer-events-none">
                             <div
                                 class="inline-block bg-[#0f172a]/80 backdrop-blur-md px-5 py-2 rounded-full shadow-lg border border-white/10">
                                 <h3
@@ -1335,7 +1531,7 @@
                         </div>
 
                         <div id="diagram-container"
-                            class="relative w-full h-full min-h-[500px] rounded-xl overflow-hidden bg-white group">
+                            class="relative w-full rounded-xl overflow-hidden bg-white group">
                             <img src="assets/diagram plant cropped.webp" alt="Planta no Solo"
                                 class="absolute inset-0 w-full h-full object-cover z-0">
 
@@ -1356,9 +1552,9 @@
                     </div>
                 </div>
 
-                <div class="w-full lg:w-5/12">
+                <div class="fund-painel w-full">
                     <div id="details-panel"
-                        class="glass-panel p-8 lg:p-12 rounded-[2rem] h-full flex flex-col justify-center border border-white/10 relative overflow-hidden transition-all duration-500 shadow-2xl">
+                        class="glass-panel p-6 lg:p-7 rounded-[2rem] h-full flex flex-col justify-center border border-white/10 relative overflow-hidden transition-all duration-500 shadow-2xl">
                         <div id="panel-default" class="text-center flex flex-col items-center animate-fade-in">
                             <div
                                 class="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 border border-white/10">
@@ -1402,6 +1598,7 @@
                     </div>
                 </div>
             </div>
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
                 <div
@@ -1441,16 +1638,16 @@
     <section id="view-mapping" class="view-section bg-bio-dark">
         <div class="container mx-auto px-4 md:px-6">
 
-            <div class="text-center mb-12 animate-fade-in">
+            <div class="text-center mb-6 animate-fade-in mapa-topo">
                 <div
-                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-4">
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-2">
                     Sistema de Decisão Agronômica
                 </div>
-                <h2 class="font-display text-4xl md:text-6xl text-white font-bold mb-4">
+                <h2 class="font-display text-white font-bold mb-1">
                     RizoWiki <span
                         class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">Solver</span>
                 </h2>
-                <p class="text-slate-400 font-light max-w-2xl mx-auto">
+                <p class="text-slate-400 font-light max-w-2xl mx-auto text-sm md:text-base">
                     Diagnóstico profundo: Mecanismo, Agentes (Cepas) e Protocolo Técnico detalhado.
                 </p>
             </div>
@@ -1549,8 +1746,10 @@
 
     <section id="view-factors" class="view-section bg-bio-dark">
         <div class="container mx-auto px-4 md:px-6">
-            <h2 class="font-display text-4xl md:text-5xl text-white font-bold mb-6">Fatores Críticos</h2>
-            <p class="text-xl text-gray-400 mb-4 max-w-4xl">Variáveis que decidem se o inoculante funciona.</p>
+            <div class="fund-topo">
+                <h2 class="font-display text-white font-bold">Fatores Críticos</h2>
+                <p class="text-gray-400">Variáveis que decidem se o inoculante funciona.</p>
+            </div>
         </div>
         <!-- Atlas de evidências (analytics.html) primeiro, na largura toda; depois o guia de boas práticas e o simulador -->
         <div id="analytics-container" class="w-full mt-2 mb-12"></div>
@@ -1746,20 +1945,20 @@
     <section id="view-lab" class="view-section bg-bio-dark">
         <div class="container mx-auto px-4 md:px-6 h-full flex flex-col">
 
-            <div class="mb-8 border-b border-white/10 pb-6 flex flex-col md:flex-row justify-between items-end gap-6">
-                <div>
+            <div class="mb-4 border-b border-white/10 pb-3 flex flex-col md:flex-row justify-between items-end gap-6">
+                <div class="fund-topo" style="margin-bottom:0">
                     <div
-                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold tracking-widest uppercase mb-2">
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold tracking-widest uppercase mb-1">
                         <i class="fas fa-microscope"></i> Simulador Fisiológico v3.5 (Final)
                     </div>
-                    <h2 class="font-display text-4xl md:text-5xl text-white font-bold mb-2">Engenharia de Inoculantes
+                    <h2 class="font-display text-white font-bold">Engenharia de Inoculantes
                     </h2>
                     <p class="text-gray-400 max-w-2xl">Simule o comportamento microbiológico sob stress. Visualização
                         aprimorada (Glassmorphism).</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <div class="glass-panel p-4 rounded-xl border-l-4 border-blue-500">
                     <label class="tech-label text-blue-400">Eixo X (Ambiente)</label>
                     <select id="axisX"
@@ -1811,7 +2010,7 @@
                 </div>
             </div>
 
-            <div class="glass-panel p-6 rounded-[2rem] relative shadow-2xl flex flex-col h-[65vh] min-h-[500px]">
+            <div class="lab-grafico glass-panel p-6 rounded-[2rem] relative shadow-2xl flex flex-col">
                 <div id="dynamic-warning"
                     class="absolute top-6 right-6 z-20 max-w-sm text-right pointer-events-none transition-opacity duration-500 opacity-0">
                     <div
@@ -1945,8 +2144,34 @@
             if (target) { target.style.display = 'block'; setTimeout(() => target.classList.add('active-view'), 10); }
             const navBtn = document.getElementById(`nav-${viewId}`);
             if (navBtn) navBtn.classList.add('active');
+            document.querySelectorAll('.nav-mob').forEach(b => b.classList.toggle('ativo', b.dataset.view === viewId));
             window.scrollTo(0, 0);
+            ajustarAlturas();
         }
+
+        // --- Altura útil: mede o cabeçalho real (barra + linha de ícones) e publica em CSS e para os iframes ---
+        function ajustarAlturas() {
+            const nav = document.querySelector('nav');
+            if (!nav) return;
+            const linha = nav.querySelector('.nav-mobile');
+            let h = nav.getBoundingClientRect().height;
+            if (linha && getComputedStyle(linha).display !== 'none' && getComputedStyle(linha).position === 'absolute') h += linha.offsetHeight;
+            const util = Math.max(240, window.innerHeight - h);
+            const raiz = document.documentElement.style;
+            raiz.setProperty('--nav-h', Math.round(h) + 'px');
+            raiz.setProperty('--altura-util', util + 'px');
+            document.querySelectorAll('iframe').forEach(f => { try { f.contentWindow.postMessage({ rizoTela: { util, largura: window.innerWidth, modoTela: document.documentElement.classList.contains('modo-tela') } }, '*'); } catch (e) {} });
+            window.dispatchEvent(new CustomEvent('rizo-alturas', { detail: { util, navH: h } }));
+        }
+        window.ajustarAlturas = ajustarAlturas;
+        // os iframes (Mecanismos, Fatores) pedem a altura útil quando terminam de carregar
+        window.addEventListener('message', ev => { if (ev.data && ev.data.rizoPedeTela) ajustarAlturas(); });
+        let _tAlt = null;
+        const _agendarAlturas = () => { clearTimeout(_tAlt); _tAlt = setTimeout(ajustarAlturas, 80); };
+        window.addEventListener('resize', _agendarAlturas);
+        window.addEventListener('orientationchange', () => setTimeout(ajustarAlturas, 250));
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', _agendarAlturas);
+        document.addEventListener('DOMContentLoaded', ajustarAlturas);
 
 
         // --- Modo tela (tela interativa do Dia de Campo) ---
@@ -1969,6 +2194,7 @@
             const labAtivo = document.getElementById('view-lab');
             if (ativo && labAtivo && labAtivo.classList.contains('active-view')) (window.switchView || switchView)('hero');
             if (window.currentWikiKey && typeof loadWiki === 'function') loadWiki(window.currentWikiKey);
+            ajustarAlturas();
             reiniciarTimerOcioso();
         }
         function alternarModoTela() { aplicarModoTela(!document.documentElement.classList.contains('modo-tela')); }
@@ -2009,8 +2235,8 @@
             for (let i = 0; i < count; i++) {
                 const div = document.createElement('div');
                 div.classList.add('bacterium');
-                const left = 25 + Math.random() * 50;
-                const top = 48 + Math.random() * 45;
+                const left = 22 + Math.random() * 56;   // rizosfera na imagem inteira: ~50–80% da altura
+                const top = 50 + Math.random() * 28;
                 const animDuration = 2 + Math.random() * 4;
                 const animDelay = Math.random() * -5;
                 const animName = `move-${i % 5}`;
@@ -2032,7 +2258,7 @@
                 type: 'Direto - Bioestimulação',
                 desc: 'Fitohormônios produzidos por PGPB (como AIA, citocininas e giberelinas) remodelam a arquitetura das raízes, aumentando drasticamente o número de raízes finas e pelos radiculares. Isso amplia o volume de solo explorado e a capacidade de ancoragem.',
                 impact: 'Aumento da zona de absorção de água e tolerância inicial à seca.',
-                icon: 'sprout', top: '75%', left: '50%', color: 'text-bio-soil', border: 'border-bio-soil', shadow: 'shadow-orange-500/50', bg: 'bg-bio-soil/10', borderCol: 'border-bio-soil'
+                icon: 'sprout', top: '65%', left: '50%', color: 'text-bio-soil', border: 'border-bio-soil', shadow: 'shadow-orange-500/50', bg: 'bg-bio-soil/10', borderCol: 'border-bio-soil'
             },
             {
                 id: 'nitrogen',
@@ -2040,7 +2266,7 @@
                 type: 'Direto - Biofertilização',
                 desc: 'Bactérias diazotróficas (Rhizobium, Azospirillum) convertem o N₂ inerte da atmosfera em amônia (NH₄⁺) assimilável pelas plantas. Em leguminosas, ocorre via simbiose nodular; em gramíneas, via associação na rizosfera.',
                 impact: 'Substituição parcial ou total da adubação nitrogenada mineral (Ureia).',
-                icon: 'activity', top: '65%', left: '30%', color: 'text-bio-purple', border: 'border-bio-purple', shadow: 'shadow-purple-500/50', bg: 'bg-bio-purple/10', borderCol: 'border-bio-purple'
+                icon: 'activity', top: '59%', left: '30%', color: 'text-bio-purple', border: 'border-bio-purple', shadow: 'shadow-purple-500/50', bg: 'bg-bio-purple/10', borderCol: 'border-bio-purple'
             },
             {
                 id: 'nutrients',
@@ -2048,7 +2274,7 @@
                 type: 'Direto - Nutrição',
                 desc: 'Bactérias e fungos utilizam duas estratégias: 1) Solubilização Inorgânica: Acidificação da rizosfera via ácidos orgânicos (ex: ácido glucônico via PQQ-GDH) para dissolver P inorgânico; 2) Mineralização Orgânica: Hidrólise de P orgânico (como fitatos) via enzimas (fosfatases e fitases).',
                 impact: 'Maior eficiência da adubação fosfatada em solos tropicais.',
-                icon: 'droplet', top: '85%', left: '70%', color: 'text-bio-accent', border: 'border-bio-accent', shadow: 'shadow-sky-500/50', bg: 'bg-bio-accent/10', borderCol: 'border-bio-accent'
+                icon: 'droplet', top: '71%', left: '70%', color: 'text-bio-accent', border: 'border-bio-accent', shadow: 'shadow-sky-500/50', bg: 'bg-bio-accent/10', borderCol: 'border-bio-accent'
             },
             {
                 id: 'auxin',
@@ -2056,7 +2282,7 @@
                 type: 'Bioestimulação',
                 desc: 'Produção de ácido indol-3-acético (AIA) a partir do L-triptofano exsudado pela planta. O AIA estimula a divisão celular intensa, o alongamento do caule e a formação de raízes adventícias.',
                 impact: 'Vigor inicial acelerado e maior uniformidade no estande de plantas.',
-                icon: 'scan', top: '55%', left: '65%', color: 'text-bio-pink', border: 'border-bio-pink', shadow: 'shadow-pink-500/50', bg: 'bg-bio-pink/10', borderCol: 'border-bio-pink'
+                icon: 'scan', top: '53%', left: '65%', color: 'text-bio-pink', border: 'border-bio-pink', shadow: 'shadow-pink-500/50', bg: 'bg-bio-pink/10', borderCol: 'border-bio-pink'
             },
             {
                 id: 'leaves',
@@ -2064,7 +2290,7 @@
                 type: 'Efeito Indireto',
                 desc: 'Uma raiz mais forte e bem nutrida pode sustentar uma parte aérea maior. Quando a água e os nutrientes deixam de ser o limite, a planta pode manter os estômatos abertos por mais tempo.',
                 impact: 'Pode deixar as folhas mais verdes quando a nutrição era o limite.',
-                icon: 'wind', top: '30%', left: '50%', color: 'text-bio-leaf', border: 'border-bio-leaf', shadow: 'shadow-green-500/50', bg: 'bg-bio-leaf/10', borderCol: 'border-bio-leaf'
+                icon: 'wind', top: '23%', left: '77%', color: 'text-bio-leaf', border: 'border-bio-leaf', shadow: 'shadow-green-500/50', bg: 'bg-bio-leaf/10', borderCol: 'border-bio-leaf'
             },
             {
                 id: 'photosynthesis',
@@ -2072,7 +2298,7 @@
                 type: 'Resultado Integrado',
                 desc: 'Quando nutrição, hormônios e sanidade melhoram, a planta tende a fotossintetizar mais. O carbono fixado vira biomassa (grãos, frutos e fibras).',
                 impact: 'Aumento direto na produtividade (kg/ha) e qualidade da colheita.',
-                icon: 'sun', top: '10%', left: '20%', color: 'text-bio-gold', border: 'border-bio-gold', shadow: 'shadow-yellow-500/50', bg: 'bg-bio-gold/10', borderCol: 'border-bio-gold'
+                icon: 'sun', top: '17%', left: '38%', color: 'text-bio-gold', border: 'border-bio-gold', shadow: 'shadow-yellow-500/50', bg: 'bg-bio-gold/10', borderCol: 'border-bio-gold'
             }
         ];
 
@@ -2610,15 +2836,25 @@
 
         function renderWiki() {
             const nav = document.getElementById('wiki-nav');
-            if (nav) nav.innerHTML = Object.keys(bioData).map(key => `
-            <button onclick="loadWiki('${key}')" id="wiki-btn-${key}" class="neon-btn wiki-nav-btn w-[65vw] lg:w-full flex-shrink-0 text-left p-6 mr-4 lg:mr-0 lg:mb-4 rounded-2xl flex items-center group">
-                <div class="neon-bar" style="--glow-color: ${bioData[key].colors.main}"></div>
-                <div class="pl-10">
-                    <div class="font-bold text-white text-xl tracking-tight">${bioData[key].name}</div>
-                </div>
-            </button>
-        `).join('');
+            if (nav) nav.innerHTML = Object.keys(bioData).map(key => {
+                const d = bioData[key], img = wikiImg(d, 'colonia');
+                return `
+            <button onclick="loadWiki('${key}')" id="wiki-btn-${key}" role="tab" class="neon-btn wiki-nav-btn" style="--cor:${d.colors.main}" title="${d.name}">
+                <span class="wiki-nav-mini" style="${img ? `background-image:url('${img}')` : `background:${d.colors.main}`}"></span>
+                <span class="wiki-nav-nome text-white">${d.name}</span>
+            </button>`;
+            }).join('');
             loadWiki('bacillus');
+        }
+
+        // Atalhos da ficha: rolam até o bloco (o cabeçalho fixo não cobre o título)
+        function irParaBlocoWiki(id, abrir) {
+            let el = document.getElementById(id);
+            if (!el && id === 'wiki-bloco-tecnico') el = document.querySelector('#wiki-content details.detalhes-tecnicos');
+            if (!el) return;
+            if (abrir && el.tagName === 'DETAILS') el.open = true;
+            const navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 80;
+            window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - navH - 12, behavior: 'smooth' });
         }
 
         function abrirMatrizFuncoes() {
@@ -2874,7 +3110,7 @@
             if (!d.alvos) window.wikiRadarModo = 'funcoes';
             window.currentWikiKey = key;
 
-            document.querySelectorAll('.wiki-nav-btn').forEach(b => b.classList.toggle('wiki-nav-ativo', b.id === `wiki-btn-${key}`));
+            document.querySelectorAll('.wiki-nav-btn').forEach(b => { const on = b.id === `wiki-btn-${key}`; b.classList.toggle('wiki-nav-ativo', on); b.setAttribute('aria-selected', on); if (on && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
             content.style.borderTopColor = d.colors.main;
             content.scrollTop = 0;
 
@@ -2883,21 +3119,39 @@
             const ext = d.extension;
             const outros = Object.keys(bioData).filter(k => k !== key);
 
-            // 1. Cabeçalho + foto da colônia
-            let html = `
-            <div class="mb-8 animate-fade-in">
-                <div class="text-xs font-bold uppercase tracking-widest mb-2" style="color:${d.colors.main}">Grupo Microbiano</div>
-                <div class="flex flex-wrap items-center gap-4 mb-4">
-                    <h2 class="wiki-title text-white font-bold">${d.name}</h2>
-                    ${seloEvidencia(d)}
-                </div>
-                <p class="text-gray-300 text-lg leading-relaxed mb-6">${d.descShort}</p>
-                ${colonia ? `
-                <div class="relative cursor-zoom-in" onclick="openLightbox('${colonia}', '${d.name.replace(/'/g, "\\'")}')">
-                    <img src="${colonia}" alt="${d.name}" class="w-full h-72 object-cover rounded-2xl border border-white/10 shadow-2xl">
-                    ${SELO_ILUSTRATIVA}
-                </div>` : ''}
-            </div>`;
+            // 1. Primeira tela: imagem inteira (sem corte) + ficha curta
+            const foto = document.getElementById('wiki-foto');
+            if (foto) foto.innerHTML = colonia ? `
+                <div class="wiki-foto-fundo" style="background-image:url('${colonia}')"></div>
+                <button class="wiki-foto-btn" onclick="openLightbox('${colonia}', '${d.name.replace(/'/g, "\\'")}')" aria-label="Ampliar imagem de ${d.name}">
+                    <img src="${colonia}" alt="${d.name}" class="wiki-foto-img">
+                </button>
+                ${SELO_ILUSTRATIVA}
+                <span class="wiki-foto-zoom"><i class="fas fa-search-plus"></i></span>` : `<div class="wiki-foto-vazia" style="background:${d.colors.main}22"></div>`;
+            const info = document.getElementById('wiki-info');
+            if (info) {
+                const fx = (d.funcoes || []).map((v, i) => ({ v, i })).filter(f => f.v > 0).sort((a, b) => b.v - a.v);
+                info.style.setProperty('--cor', d.colors.main);
+                info.scrollTop = 0;
+                info.innerHTML = `
+                <div class="animate-fade-in">
+                    <div class="wiki-info-grupo" style="color:${d.colors.main}">Grupo microbiano</div>
+                    <h2 class="wiki-info-nome text-white">${d.name}</h2>
+                    <div class="wiki-info-selo">${seloEvidencia(d)}</div>
+                    <p class="wiki-info-desc text-gray-300">${d.descShort}</p>
+                    ${fx.length ? `
+                    <div class="wiki-info-sec text-gray-400">O que faz pela planta</div>
+                    <ul class="wiki-info-funcoes">
+                        ${fx.map(f => `<li class="text-white"><span class="mz-dot ${f.v === 2 ? 'mz-dot-principal' : 'mz-dot-secundaria'} mz-dot-sm"></span>${FUNCOES_LABELS_LONGOS[f.i]}<small class="text-gray-400">${f.v === 2 ? 'principal' : 'secundária'}</small></li>`).join('')}
+                    </ul>` : ''}
+                    <div class="wiki-info-atalhos">
+                        <button class="wiki-atalho" onclick="irParaBlocoWiki('wiki-bloco-grafico')"><i class="fas fa-chart-pie"></i> Gráfico e comparação</button>
+                        ${efeitos.length ? `<button class="wiki-atalho" onclick="irParaBlocoWiki('wiki-bloco-efeitos')"><i class="fas fa-eye"></i> Efeito na planta</button>` : ''}
+                        <button class="wiki-atalho" onclick="irParaBlocoWiki('wiki-bloco-tecnico', true)"><i class="fas fa-flask"></i> Detalhes técnicos</button>
+                    </div>
+                </div>`;
+            }
+            let html = '';
 
             // 2. Frase de manejo em destaque
             if (ext && ext.traducaoParaManejo) {
@@ -2910,7 +3164,7 @@
 
             // 3. O que este grupo faz pela planta
             html += `
-            <div class="mb-12 p-6 md:p-8 rounded-3xl bg-white/5 border border-white/10 animate-fade-in" style="animation-delay: 0.1s;">
+            <div id="wiki-bloco-grafico" class="mb-12 p-6 md:p-8 rounded-3xl bg-white/5 border border-white/10 animate-fade-in" style="animation-delay: 0.1s;">
                 <h3 class="text-2xl font-display font-bold text-white mb-4 flex items-center gap-3">
                     <i class="fas fa-seedling" style="color:${d.colors.main}"></i> O que este grupo faz pela planta
                 </h3>
@@ -2937,7 +3191,7 @@
             // 4. Imagens de efeito (legenda sempre visível: tela de toque não tem "hover")
             if (efeitos.length) {
                 html += `
-            <div class="mb-12 animate-fade-in" style="animation-delay: 0.15s;">
+            <div id="wiki-bloco-efeitos" class="mb-12 animate-fade-in" style="animation-delay: 0.15s;">
                 <h3 class="text-2xl font-display font-bold text-white mb-6 flex items-center gap-3">
                     <i class="fas fa-eye" style="color:${d.colors.main}"></i> Efeito na planta
                 </h3>
@@ -3383,7 +3637,7 @@
         };
     </script>
 
-    <script src="js/holobionte.compiled.js" defer></script>
+    <script src="js/holobionte.compiled.js?v=20261125b" defer></script>
 
     <script>
         // Desabilitar clique direito
@@ -3542,7 +3796,7 @@
                     if (a && !a.dataset.loaded) {
                         a.dataset.loaded = "true";
                         const f2 = document.createElement("iframe");
-                        f2.src = "analytics.html?v=20261124b";
+                        f2.src = "analytics.html?v=20261125b";
                         f2.style.width = "100%";
                         f2.style.height = "1400px";
                         f2.style.border = "none";
@@ -3567,7 +3821,7 @@
                     if (m && !m.dataset.loaded) {
                         m.dataset.loaded = "true";
                         const f3 = document.createElement("iframe");
-                        f3.src = "mecanismos.html?v=20261124b";
+                        f3.src = "mecanismos.html?v=20261125b";
                         f3.style.width = "100%";
                         f3.style.height = "900px";
                         f3.style.border = "none";

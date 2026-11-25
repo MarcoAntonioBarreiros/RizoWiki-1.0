@@ -20,9 +20,53 @@ button { font:inherit; color:inherit; cursor:pointer; touch-action:manipulation;
 h1,h3 { color:var(--strong); margin:0; font-family:'Space Grotesk', Inter, sans-serif; letter-spacing:-.02em; }
 h1 { font-size:clamp(24px,3vw,36px); line-height:1.1; }
 .lead { color:var(--muted); font-size:15px; line-height:1.55; margin:8px 0 0; max-width:900px; }
-.rolagem { overflow-x:auto; margin-top:16px; }
-#mec { min-width:860px; }
-svg.sk { width:100%; height:auto; display:block; overflow:visible; }
+#mec { margin-top:14px; }
+svg.sk { display:block; overflow:visible; }
+.wrap { padding-top:12px; }
+.panel { padding:16px 20px; }
+.lead { margin-top:4px; }
+.lead-vertical { display:none; }
+html.mec-vertical .lead-completa { display:none; } html.mec-vertical .lead-vertical { display:block; }
+html.modo-tela h1 { font-size:clamp(28px,2.6vw,44px); } html.modo-tela .lead { font-size:17px; } html.modo-tela .col-tit { font-size:13px; }
+/* ---- versão vertical (celular) ---- */
+.v-modos { display:flex; gap:4px; padding:4px; border-radius:14px; background:var(--chip); border:1px solid var(--chip-b); }
+.v-modo { flex:1; min-height:44px; border:0; border-radius:10px; background:transparent; font-weight:700; font-size:13.5px; color:var(--muted); }
+.v-modo.on { background:var(--accent); color:#fff; box-shadow:0 4px 14px rgba(14,165,233,.35); }
+.v-chips { display:flex; gap:8px; overflow-x:auto; padding:10px 2px 6px; scrollbar-width:none; }
+.v-chips::-webkit-scrollbar { display:none; }
+.v-chip { flex:0 0 auto; display:inline-flex; align-items:center; gap:7px; min-height:42px; padding:0 14px; border-radius:999px; border:1px solid var(--chip-b); background:var(--pill); color:var(--strong); font-weight:700; font-size:13px; white-space:nowrap; }
+.v-chip i { color:var(--muted); }
+.v-chip.on { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }
+.v-chip.on i { color:var(--accent); }
+.v-ponto { width:10px; height:10px; border-radius:50%; flex:0 0 auto; background:var(--o, #94a3b8); }
+.v-diag { position:relative; margin-top:6px; }
+.v-lig { position:absolute; left:0; top:0; pointer-events:none; overflow:visible; }
+.v-lig .v-l { pointer-events:auto; cursor:pointer; } .v-lig .v { stroke-opacity:.6; transition:stroke-opacity .2s; }
+.v-lig .v-l.on .v { stroke-opacity:1; } .v-lig .v-l.off .v { stroke-opacity:.1; }
+.v-topo { display:flex; flex-direction:column; align-items:center; padding-bottom:30px; }
+.v-cols { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:clamp(30px,10vw,70px); padding-left:18px; }
+.v-col { display:flex; flex-direction:column; justify-content:space-around; gap:10px; }
+.v-col .v-tit { text-align:left; margin-bottom:0; }
+.v-col .v-no { width:100%; }
+.v-tit { margin:0 0 6px; text-align:center; font-size:10.5px; letter-spacing:.14em; font-weight:800; text-transform:uppercase; color:var(--muted); }
+.v-no { position:relative; z-index:1; display:inline-flex; align-items:center; gap:7px; min-height:44px; max-width:100%; padding:6px 13px; border-radius:12px; border:1px solid var(--chip-b); background:var(--pill); color:var(--strong); font-weight:700; font-size:13.5px; line-height:1.2; text-align:left; transition:opacity .2s, box-shadow .2s; }
+.v-no i { color:var(--muted); }
+.v-no.v-org { border:2px solid var(--o); background:color-mix(in srgb, var(--o) 16%, var(--pill)); }
+.v-no.v-foco { box-shadow:0 0 0 3px var(--accent); }
+.v-no.v-org.v-foco { box-shadow:0 0 0 3px var(--o); }
+.v-no.v-tocado { box-shadow:0 0 0 3px var(--strong); }
+.v-no.off { opacity:.3; }
+.v-ficha { margin-top:14px; }
+.v-cab { border-top:4px solid var(--c); padding-top:10px; }
+.v-cab h3 { font-size:17px; }
+.v-cab .sub { font-size:12px; color:var(--muted); margin:3px 0 4px; }
+.v-todos { border:0; background:none; padding:0; color:var(--accent); font-weight:700; font-size:12px; text-decoration:underline; }
+.v-ir { display:inline-flex; align-items:center; gap:6px; min-height:40px; margin:4px 0 2px; padding:0 12px; border-radius:10px; border:1px solid var(--chip-b); background:var(--chip); color:var(--strong); font-weight:700; font-size:12.5px; }
+.v-ir i { color:var(--accent); font-size:11px; }
+html.mec-vertical .wrap { padding:8px 8px 30px; }
+html.mec-vertical .panel { padding:14px 12px; border-radius:16px; }
+html.mec-vertical h1 { font-size:21px; }
+html.mec-vertical .lead { font-size:13.5px; }
 .col-tit { font-size:11px; letter-spacing:.16em; font-weight:800; fill:var(--muted); }
 .lig { cursor:pointer; } .lig .v { stroke-opacity:.5; transition:stroke-opacity .2s; }
 .lig.on .v { stroke-opacity:1; } .lig.off .v { stroke-opacity:.08; }
@@ -55,12 +99,13 @@ svg.sk { width:100%; height:auto; display:block; overflow:visible; }
 <div class="wrap"><div class="panel">
   <p class="eyebrow">Mecanismos de ação</p>
   <h1>Do problema no campo ao modo de ação do biológico</h1>
-  <p class="lead">Toque num problema, num microrganismo ou num mecanismo para acender os caminhos ligados a ele. Toque de novo para ler a explicação com a fonte; um terceiro toque apaga.</p>
-  <div class="rolagem"><div id="mec"></div></div>
+  <p class="lead lead-completa">Toque num item para acender os caminhos. Toque de novo para ler a explicação e a fonte.</p>
+  <p class="lead lead-vertical">Escolha um ponto de partida. Toque num item ou numa ligação para ver a explicação e a fonte.</p>
+  <div id="mec"></div>
   <div class="legenda" id="leg"></div>
   <p class="nota"><i class="fas fa-circle-info" style="color:var(--accent)"></i> Cada caminho resume o que foi descrito para estirpes estudadas, não para o gênero inteiro. Todas as linhas têm a mesma espessura: o diagrama mostra ligações, não quantidade de evidência. Os resultados medidos estão na aba Fatores.</p>
 </div></div>
 <div id="pop-raiz"></div>
-<script src="js/mecanismos.js?v=20261124b"></script>
+<script src="js/mecanismos.js?v=20261125b"></script>
 </body>
 </html>
