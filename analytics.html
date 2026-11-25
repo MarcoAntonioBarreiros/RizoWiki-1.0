@@ -212,12 +212,64 @@ details.fonte p { margin:5px 0; font-size:12.5px; line-height:1.45; }
   .leg-fatores button i { color:var(--o); width:20px; text-align:center; }
   h1 { font-size:24px; }
 }
+
+/* Expansão de gráficos */
+[data-grafico-expansivel] { position:relative; }
+.grafico-acao { position:absolute; z-index:2; top:6px; right:6px; width:44px; height:44px; display:grid; place-items:center;
+  padding:0; border:1px solid transparent; border-radius:12px; color:var(--muted); background:transparent; font-size:16px;
+  transition:color .2s, background .2s, border-color .2s; }
+.grafico-acao:hover, .grafico-acao:focus-visible { color:var(--strong); background:var(--chip); border-color:var(--chip-b); }
+.grafico-acao:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.card-top, [data-grafico-expansivel] > .cab { padding-inline-end:36px; }
+.grafico-titulo-expansao { display:none; }
+.grafico-modal { --folga:clamp(8px, 3vw, 40px); --margem:clamp(12px, 2vw, 30px);
+  position:fixed; inset:max(var(--folga), env(safe-area-inset-top)) max(var(--folga), env(safe-area-inset-right))
+               max(var(--folga), env(safe-area-inset-bottom)) max(var(--folga), env(safe-area-inset-left));
+  width:auto; height:auto; max-width:1600px; max-height:none; margin:auto; padding:0;
+  color:var(--text); background:var(--pop); border:1px solid var(--panel-b); border-radius:20px;
+  box-shadow:var(--shadow); overflow:clip; transform-origin:top left; }
+.grafico-modal.grafico-modal-embutido { inset:0; max-width:none; border-radius:inherit; }
+.grafico-modal::backdrop { background:rgba(2,6,23,.76); animation:escurecer-grafico 350ms both; }
+.grafico-modal-embutido::backdrop { background:transparent; animation:none; }
+.grafico-modal.restaurando::backdrop { animation:clarear-grafico 350ms both; }
+@keyframes escurecer-grafico { from { opacity:0; } }
+@keyframes clarear-grafico { to { opacity:0; } }
+@media (prefers-reduced-motion: reduce) { .grafico-modal::backdrop, .grafico-modal.restaurando::backdrop { animation:none; } }
+html:not(.embutido).grafico-em-apresentacao { overflow:hidden; scrollbar-gutter:stable; }
+html.grafico-em-apresentacao body { overflow:hidden; }
+.grafico-modal-corpo { height:100%; padding:var(--margem); overflow:auto; overscroll-behavior:contain; }
+.grafico-restaurar { top:var(--margem); right:var(--margem); background:var(--pop); border-color:var(--chip-b); }
+.grafico-ampliado { display:flex; flex-direction:column; min-height:100%; padding:0; border:0; background:none; }
+.grafico-ampliado.realce { box-shadow:none; }
+.grafico-ampliado .grafico-expandir { display:none; }
+.grafico-ampliado h2, .grafico-ampliado h3 { font-size:clamp(18px, 2.3vw, 34px); padding-inline-end:54px; }
+.grafico-ampliado .org, .grafico-ampliado .metrica, .grafico-ampliado .leg-serie { font-size:clamp(12px, 1.3vw, 19px); }
+.grafico-ampliado .resultado { font-size:clamp(14px, 1.5vw, 22px); }
+.grafico-ampliado .card-pe, .grafico-ampliado .nota-curva, .grafico-ampliado .nota-painel { font-size:clamp(12px, 1.1vw, 17px); }
+.grafico-ampliado .grafico-titulo-expansao { display:block; margin:0 0 8px; }
+.grafico-ampliado .grafico-area { flex:1; display:flex; flex-direction:column; justify-content:center; min-width:0; }
+.grafico-ampliado .grafico-area svg.g { display:block; flex:none; width:100%; height:auto; overflow:visible; }
+.grafico-ampliado .grafico-qual-linha { align-items:center; padding:clamp(12px, 2vw, 24px) !important; }
+.grafico-ampliado .grafico-qual-linha > * { font-size:clamp(14px, 1.6vw, 24px) !important; }
+.grafico-ampliado .cab { padding:0; }
+.grafico-modal .dica { position:fixed; }
+.grafico-modal [data-tip]:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.dica-leitura + .dica-leitura { margin-top:7px; border-top:1px solid var(--chip-b); padding-top:7px; }
+.grafico-modal .ficha-fundo { position:fixed; inset:0; display:grid; place-items:center; padding:12px; }
+.grafico-modal .ficha { position:relative; top:auto; left:auto; transform:none; max-height:100%; overflow:auto; }
+@media (max-width:640px), (max-height:500px) { .grafico-modal { --folga:7px; border-radius:14px; } }
+@media (max-height:500px) and (orientation:landscape) {
+  .grafico-modal { --margem:10px; }
+  .grafico-ampliado .card-top { margin-bottom:4px; }
+  .grafico-ampliado .card-pe { margin-top:6px; padding-top:4px; }
+}
 </style>
 </head>
 <body>
 <div class="wrap" id="app"></div>
 <div id="pop-raiz"></div>
 <script src="js/fatores_dados.js?v=20261125b"></script>
-<script src="js/fatores.js?v=20261125b"></script>
+<script src="js/fatores-expandir.js?v=20261125c"></script>
+<script src="js/fatores.js?v=20261125c"></script>
 </body>
 </html>

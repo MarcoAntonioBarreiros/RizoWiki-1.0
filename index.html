@@ -1286,6 +1286,30 @@
         }
 
         /* ===== Fundamentos: título compacto e planta inteira (sem corte) ===== */
+        .fatores-janela {
+            position: static; width: 100%; max-width: none; max-height: none; margin: 0;
+            padding: 0; border: 0; background: transparent; overflow: visible;
+        }
+        .fatores-janela > iframe { display: block; }
+        html.fatores-travar-rolagem { scrollbar-gutter: stable; }
+        .fatores-janela.expandida {
+            --folga-x: clamp(12px, 3vw, 56px); --folga-y: clamp(12px, 4vh, 44px);
+            position: fixed;
+            inset: max(var(--folga-y), env(safe-area-inset-top)) max(var(--folga-x), env(safe-area-inset-right))
+                   max(var(--folga-y), env(safe-area-inset-bottom)) max(var(--folga-x), env(safe-area-inset-left));
+            margin: auto; width: auto; height: auto; max-width: 1600px; transform-origin: top left;
+            border-radius: 20px; overflow: clip; overscroll-behavior: contain;
+        }
+        html.modo-tela .fatores-janela.expandida { --folga-x: 16px; --folga-y: 16px; max-width: none; }
+        @media (max-width: 640px), (max-height: 500px) {
+            html .fatores-janela.expandida, html.modo-tela .fatores-janela.expandida { --folga-x: 7px; --folga-y: 7px; border-radius: 14px; }
+        }
+        .fatores-janela::backdrop { background: rgba(2, 6, 23, .76); animation: fatores-escurecer 350ms both; }
+        .fatores-janela.restaurando::backdrop { animation: fatores-clarear 350ms both; }
+        @keyframes fatores-escurecer { from { opacity: 0; } }
+        @keyframes fatores-clarear { to { opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .fatores-janela::backdrop, .fatores-janela.restaurando::backdrop { animation: none; } }
+
         .fund-topo { margin-bottom: 12px; }
         .fund-topo h2 { font-size: clamp(1.4rem, 1rem + 1.4vw, 2.4rem); line-height: 1.1; }
         .fund-topo p { font-size: clamp(.9rem, .85rem + .3vw, 1.1rem); margin-top: .25rem; }
@@ -3638,6 +3662,7 @@
     </script>
 
     <script src="js/holobionte.compiled.js?v=20261125b" defer></script>
+    <script src="js/fatores-janela.js?v=20261125c"></script>
 
     <script>
         // Desabilitar clique direito
@@ -3796,7 +3821,8 @@
                     if (a && !a.dataset.loaded) {
                         a.dataset.loaded = "true";
                         const f2 = document.createElement("iframe");
-                        f2.src = "analytics.html?v=20261125b";
+                        f2.src = "analytics.html?v=20261125c";
+                        f2.title = 'Fatores';
                         f2.style.width = "100%";
                         f2.style.height = "1400px";
                         f2.style.border = "none";
@@ -3807,12 +3833,12 @@
                         };
                         // A aba Fatores (analytics.html) informa a própria altura: matriz e páginas por fator
                         window.addEventListener('message', (ev) => {
-                            if (ev.source === f2.contentWindow && ev.data && ev.data.rizoAltura) {
+                            if (!janelaFatores.expandida && ev.source === f2.contentWindow && ev.data && ev.data.rizoAltura) {
                                 f2.style.height = (ev.data.rizoAltura + 8) + 'px';
                             }
                         });
 
-                        a.appendChild(f2);
+                        const janelaFatores = montarJanelaFatores(a, f2);
                     }
                 }
                 // 3. Mecanismos de Ação (aba própria)

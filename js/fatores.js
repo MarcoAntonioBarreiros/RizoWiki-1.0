@@ -204,12 +204,18 @@ function abrirEstudo(id, ancora) {
     ${linha('Limites', esc(e.note))}${linha('Afiliações e vínculos', esc(e.affiliation))}
     ${linha('Validação', `<span class="${e.pendente ? 'pend' : e.conferido ? 'ok' : ''}">${e.pendente ? 'Do acervo, ainda a validar. ' : e.conferido ? '' : 'Aprovado no levantamento. '}${esc(e.verification)}</span>`)}
   </div>`;
-  document.body.appendChild(ov);
+  const modalGrafico = expansaoGraficos.modal;
+  (modalGrafico || document.body).appendChild(ov);
   const ficha = ov.firstElementChild, rr = (ancora && ancora.getBoundingClientRect) ? ancora.getBoundingClientRect() : { top: 40 };
-  ficha.style.top = Math.max(12, Math.min(rr.top + scrollY - 60, document.documentElement.scrollHeight - ficha.offsetHeight - 12)) + 'px';
-  const fechar = () => ov.remove();
+  if (modalGrafico) ov.style.height = 'auto';
+  else ficha.style.top = Math.max(12, Math.min(rr.top + scrollY - 60, document.documentElement.scrollHeight - ficha.offsetHeight - 12)) + 'px';
+  const fechar = () => {
+    ov.remove();
+    if (modalGrafico) ancora?.focus({ preventScroll: true });
+  };
   ov.addEventListener('click', ev => { ev.stopPropagation(); if (ev.target === ov) fechar(); });
   ficha.querySelector('.fechar').onclick = fechar;
+  if (modalGrafico) ficha.querySelector('.fechar').focus({ preventScroll: true });
 }
 
 // ---------- VISÃO DO FATOR ----------
@@ -233,8 +239,8 @@ function abrirFator(id, salto) {
       <div class="manejo"><b>No manejo</b>${esc(v.practice || '')}</div>
     </div>
     <div class="integrado">
-      ${id === 'formulacao' ? `<div class="cab"><div><p class="eyebrow">Mesmo teste, com e sem proteção</p><h2>Quanto a proteção segura de cada biológico</h2>
-        <p>Barra clara: sem proteção. Barra cheia: com a formulação, no mesmo teste. Toque numa barra para ver o valor.</p></div></div>${graficoProtecao(a)}` : ''}
+      ${id === 'formulacao' ? `<div data-grafico-expansivel="protecao">${botaoExpandir}<div class="cab"><div><p class="eyebrow">Mesmo teste, com e sem proteção</p><h2>Quanto a proteção segura de cada biológico</h2>
+        <p>Barra clara: sem proteção. Barra cheia: com a formulação, no mesmo teste. Toque numa barra para ver o valor.</p></div></div><div class="grafico-area">${graficoProtecao(a)}</div></div>` : ''}
       <div class="cab"><div><p class="eyebrow">O que foi medido</p><h2>${id === 'formulacao' ? 'Os estudos, por tipo de medida' : 'Quanto sobra de cada biológico com ' + esc(artigo(id))}</h2>
         <p>Escolha o que foi medido. Cada medida é uma pergunta diferente: compare os biológicos dentro dela, não entre medidas.</p></div></div>
       <div class="abas-med orbes tem-on" role="tablist">${meds.map(m => orbe(MED_COR[m], MED_IC[m], MEDIDAS[m], `data-med="${m}" role="tab"`)).join('')}</div>
@@ -244,12 +250,16 @@ function abrirFator(id, salto) {
   <div id="med-cards"></div>`;
   ligarNav();
   app.querySelectorAll('.abas-med [data-med]').forEach(b => b.addEventListener('click', () => mostrarMedida(b.dataset.med)));
-  app.querySelectorAll('.linha-int').forEach(l => ligarLinha(l));
   mostrarMedida(meds.includes(ini) ? ini : meds[0]);
   app.scrollIntoView({ block: 'start' });
   if (salto) setTimeout(() => saltar(salto), 60);
 }
-function ligarLinha(l) { l.addEventListener('click', ev => { if (ev.target.closest('[data-tip]')) return; saltar(l.dataset.id); }); }
+function abrirCartaoDaLinha(ev) {
+  const linha = ev.target.closest('.linha-int');
+  if (!linha) return;
+  if (expansaoGraficos.ativa) expansaoGraficos.fechar(() => saltar(linha.dataset.id));
+  else saltar(linha.dataset.id);
+}
 function mostrarMedida(m) {
   if (!ctxFator) return;
   const { id, a } = ctxFator, ordem = F.grupos.map(g => g.nome);
@@ -257,8 +267,10 @@ function mostrarMedida(m) {
   fecharDica(); ctxFator.med = m;
   app.querySelectorAll('.abas-med [data-med]').forEach(b => { const on = b.dataset.med === m; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
   const painel = document.getElementById('med-painel');
-  painel.innerHTML = id === 'formulacao' ? '' : `<div class="painel-med">${painelMedida(m, lista)}<p class="nota-painel">Linha tracejada: 100% = o próprio controle de cada estudo. Toque numa barra para ver o valor; toque no nome para ir ao gráfico.</p></div>`;
-  painel.querySelectorAll('.linha-int').forEach(l => ligarLinha(l));
+  painel.innerHTML = id === 'formulacao' ? '' : `<div class="painel-med" data-grafico-expansivel="medida">${botaoExpandir}
+    <h2 class="grafico-titulo-expansao">${esc(MEDIDAS[m])} · ${esc(fatorPorId(id).nome)}</h2>
+    <div class="grafico-area">${painelMedida(m, lista)}</div><p class="nota-painel">Linha tracejada: 100% = o próprio controle de cada estudo. Toque numa barra para ver o valor; toque no nome para ir ao gráfico.</p></div>`;
+  modoPainel = larguraPainelAtual(painel);
   const cards = document.getElementById('med-cards');
   cards.innerHTML = `<div class="cards">${lista.map(cartao).join('')}</div>`;
   cards.querySelectorAll('.ver-estudo').forEach(b => b.addEventListener('click', ev => { ev.stopPropagation(); abrirEstudo(b.dataset.estudo, b); }));
@@ -277,12 +289,14 @@ function saltar(id) {
 
 // Painéis coordenados: um por tipo de medida; dentro do painel, ordem por organismo (não por valor)
 const dicaSobra = e => esc(`<b>${e.sobra > 100 ? '+' + num(e.sobra - 100, 0) + '% acima do controle' : num(e.sobra, 1) + '% do controle'}</b><br>${esc(e.sobraRef || '')}<br><small>${esc(corta(e.condition, 160))}</small>`);
-function painelMedida(m, lista) {
+function painelMedida(m, lista, medidas) {
   const ordem = F.grupos.map(g => g.nome);
   lista = [...lista].sort((x, y) => ordem.indexOf(x.grupoM) - ordem.indexOf(y.grupoM));
-  const larg = Math.round((document.getElementById('med-painel') || {}).clientWidth || 1000), max = 150;
+  const larg = medidas?.largura || Math.round((document.getElementById('med-painel') || {}).clientWidth || 1000), max = 150;
   if (larg >= 640) {
-    const W = 1000, esq = 330, dir = 40, alt = 60, topo = 34, H = topo + lista.length * alt + 8;
+    const W = medidas ? larg : 1000, esq = medidas ? Math.min(380, Math.round(larg * .35)) : 330;
+    const dir = 40, topo = 34, alt = medidas ? alturaLinha(medidas, lista.length, 42, topo + 8, 84) : 60;
+    const H = topo + lista.length * alt + 8;
     const x = v => esq + (W - esq - dir) * Math.min(v, max) / max;
     let s = `<svg class="g" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(MEDIDAS[m])}">`;
     [0, 50, 100, 150].forEach(t => s += `<line x1="${x(t)}" x2="${x(t)}" y1="${topo - 6}" y2="${H - 4}" stroke="var(--grid)" ${t === 100 ? 'stroke-width="2" stroke-dasharray="5 4" stroke="var(--muted)"' : ''}/><text x="${x(t)}" y="${topo - 12}" text-anchor="middle" font-size="14" fill="var(--muted)">${t === 150 ? '150%+' : t + '%'}</text>`);
@@ -315,13 +329,20 @@ function barraPainel(e, c, esq, cy, x, h, fs) {
   return `<rect x="${esq}" y="${cy - h / 2 - 3}" width="${x(100) - esq}" height="${h + 6}" rx="${h / 2 + 3}" fill="none" stroke="${c}" stroke-dasharray="4 4"/><text x="${esq + 12}" y="${cy + fs / 3}" font-size="${fs}" fill="var(--text)">${esc(e.qual || 'sem número comparável')}</text>`;
 }
 let modoPainel = null;
-addEventListener('resize', () => {
+const larguraPainelAtual = p => p.clientWidth >= 640 ? 'largo' : 'estreito:' + Math.round(p.clientWidth / 20);
+function ajustarPainelMedida() {
+  if (expansaoGraficos.ativa) return;
   const p = document.getElementById('med-painel'); if (!p || !ctxFator || !ctxFator.med) return;
-  const novo = p.clientWidth >= 640 ? 'largo' : 'estreito:' + Math.round(p.clientWidth / 20);
-  if (novo !== modoPainel) { modoPainel = novo; mostrarMedida(ctxFator.med); }
-});
+  const grafico = p.querySelector('.grafico-area');
+  const novo = larguraPainelAtual(p);
+  if (!grafico || novo === modoPainel) return;
+  modoPainel = novo;
+  grafico.innerHTML = painelMedida(ctxFator.med, ctxFator.a.filter(e => e.medida === ctxFator.med));
+}
+addEventListener('resize', ajustarPainelMedida);
 
-function graficoProtecao(a) {
+function graficoProtecao(a, medidas) {
+  if (medidas) return protecaoExpandida(a, medidas);
   const W = 1000, esq = 300, dir = 90, alt = 58, topo = 30, H = topo + a.length * alt + 10, max = 125;
   const x = v => esq + (W - esq - dir) * Math.min(v, max) / max;
   let s = `<svg class="g" viewBox="0 0 ${W} ${H}">`;
@@ -341,14 +362,48 @@ function graficoProtecao(a) {
   return s + '</svg>';
 }
 
+function protecaoExpandida(estudos, medidas) {
+  const W = medidas.largura, estreito = W < 620, L = estreito ? 10 : Math.round(W * .31), R = 12;
+  const topo = 30, alt = alturaLinha(medidas, estudos.length, estreito ? 108 : 74, topo, 144);
+  const H = topo + estudos.length * alt, x = v => L + (W - L - R) * Math.min(v, 125) / 125;
+  let svg = `<svg class="g" viewBox="0 0 ${W} ${H}">`;
+  [0, 25, 50, 75, 100, 125].forEach(t => {
+    svg += `<line x1="${x(t)}" x2="${x(t)}" y1="22" y2="${H}" stroke="var(--grid)" ${t === 100 ? 'stroke-dasharray="5 4"' : ''}/>
+      <text x="${x(t)}" y="16" text-anchor="${t === 125 ? 'end' : 'middle'}" font-size="12" fill="var(--muted)">${t}%</text>`;
+  });
+  estudos.forEach((e, i) => {
+    const y = topo + i * alt + (alt - (estreito ? 98 : 67)) / 2, c = corGrupo[e.grupoM];
+    svg += `<g class="linha-int" data-id="${e.id}">
+      <text x="5" y="${y + 15}" fill="var(--strong)" font-size="14" font-weight="700">${esc(e.grupoM)} · ${esc(e.curto)}</text>
+      <text x="5" y="${y + 33}" fill="var(--muted)" font-size="12">${esc(e.kind)}${ehFora(e) ? ' · fora do Brasil' : ''}</text>`;
+    const base = y + (estreito ? 43 : 5);
+    if (e.prot && e.prot.sem !== undefined) {
+      [['Sem proteção', e.prot.sem, hexA(c, .35)], ['Com proteção', e.prot.com, c]].forEach(([rotulo, valor, cor], j) => {
+        const linha = base + j * 26, texto = `${rotulo}: ${num(valor, j ? 0 : 1)}%`;
+        const dica = esc(`<b>${texto}</b><br><small>${esc(e.prot.ref)}</small>`);
+        svg += `<g data-tip="${dica}"><rect x="${L}" y="${linha}" width="${W - L - R}" height="23" rx="8" fill="transparent"/>
+          <rect x="${L}" y="${linha}" width="${Math.max(x(valor) - L, 3)}" height="23" rx="8" fill="${cor}"/>
+          <text x="${L + 8}" y="${linha + 16}" fill="var(--strong)" font-size="12" font-weight="700"
+            style="paint-order:stroke;stroke:var(--pop);stroke-width:2.5px;stroke-linejoin:round">${texto}</text></g>`;
+      });
+    } else {
+      svg += `<rect x="${L}" y="${base}" width="${x(100) - L}" height="25" rx="12" fill="none" stroke="${c}" stroke-dasharray="4 4"/>
+        <text x="${L + 8}" y="${base + 17}" font-size="12" fill="var(--text)">${esc(e.prot?.qual || 'sem número comparável')}</text>`;
+    }
+    svg += '</g>';
+  });
+  return svg + '</svg>';
+}
+
 // ---------- CARTÕES (nível 1: pergunta, organismo, eixos, legenda, conclusão, referência curta) ----------
 function cartao(e) {
   const c = corGrupo[e.grupoM];
-  return `<article class="card" id="c-${e.id}" style="--c:${c}">
+  return `<article class="card" id="c-${e.id}" style="--c:${c}" data-grafico-expansivel="estudo" data-experimento="${e.id}">
+    ${botaoExpandir}
     <div class="card-top"><span class="chip g"><i class="fas fa-circle" style="font-size:7px"></i>${esc(e.grupoM)}</span>${e.pendente ? '<span class="chip pend"><i class="fas fa-hourglass-half"></i>a validar</span>' : e.conferido ? '<span class="chip ok"><i class="fas fa-circle-check"></i>conferido na fonte</span>' : ''}</div>
     <h3>${esc(e.title)}</h3><p class="org">${esc(e.organism)}</p>
     <p class="metrica">${esc(e.metric)}${e.unit ? ' · ' + esc(e.unit) : ''}</p>
-    ${desenhar(e, c)}
+    <div class="grafico-area">${desenhar(e, c)}</div>
     <p class="resultado">${esc(e.headline)}</p>
     <div class="card-pe"><span><i class="fas fa-book"></i> ${esc(refCurta(e))} · ${esc(e.kind)} · ${esc(e.location)}</span><button class="ver-estudo" data-estudo="${e.id}">Ver estudo <i class="fas fa-chevron-right"></i></button></div>
   </article>`;
@@ -360,22 +415,41 @@ function dicaValor(e, rot, serie, v, ref) {
 }
 
 // ---------- tipos de gráfico ----------
-function desenhar(e, c) {
+const botaoExpandir = `<button type="button" class="grafico-acao grafico-expandir" aria-label="Expandir gráfico" title="Expandir gráfico" aria-haspopup="dialog"><i class="fas fa-expand" aria-hidden="true"></i></button>`;
+
+function desenhar(e, c, medidas) {
   const t = e.grafico;
   try {
-    if (t === 'linha' || t === 'linha-log') return gLinha(e, c, t === 'linha-log');
-    if (t === 'colunas') return gColunas(e, c);
-    if (t === 'barras') return gBarras(e, c);
-    if (t.startsWith('inclinacao')) return gInclinacao(e, c, t.includes('-t'), t.includes('log'));
-    if (t === 'antes-depois') return gAntesDepois(e, c);
-    if (t === 'duracao') return gDuracao(e, c);
-    if (t === 'waffle') return gWaffle(e, c);
+    if (t === 'linha' || t === 'linha-log') return gLinha(e, c, t === 'linha-log', medidas);
+    if (t === 'colunas') return gColunas(e, c, medidas);
+    if (t === 'barras') return gBarras(e, c, medidas);
+    if (t.startsWith('inclinacao')) return gInclinacao(e, c, t.includes('-t'), t.includes('log'), medidas);
+    if (t === 'antes-depois') return gAntesDepois(e, c, medidas);
+    if (t === 'duracao') return gDuracao(e, c, medidas);
+    if (t === 'waffle') return gWaffle(e, c, medidas);
     if (t === 'qualitativo') return gQual(e, c);
   } catch (err) { console.error(e.id, err); }
-  return gBarras(e, c);
+  return gBarras(e, c, medidas);
 }
 const coresSerie = (c, n) => [c, segundaCor(c), terceiraCor].slice(0, Math.max(n, 1));
 function legenda(nomes, cores) { return nomes.length > 1 ? `<div class="leg-serie">${nomes.map((n, i) => `<span><i style="background:${cores[i]}"></i>${esc(n)}</span>`).join('')}</div>` : ''; }
+function alturaLinha(medidas, linhas, minimo, margem, maximo = Infinity) {
+  return Math.max(minimo, Math.min(maximo, Math.floor((medidas.altura - margem) / Math.max(1, linhas))));
+}
+function quebrarRotulo(texto, largura, fonte = 12) {
+  const linhas = [];
+  for (const palavra of texto.split(/\s+/)) {
+    const atual = linhas.at(-1);
+    if (atual && (atual.length + palavra.length + 1) * fonte * .57 <= largura) linhas[linhas.length - 1] += ' ' + palavra;
+    else linhas.push(palavra);
+  }
+  return linhas;
+}
+function textoGrafico(texto, x, y, { tamanho = 12, ancora = 'middle', cor = 'var(--muted)', largura = Infinity, peso = 400, centrar = false } = {}) {
+  const linhas = quebrarRotulo(texto, largura, tamanho);
+  return `<text x="${x}" y="${y - (centrar ? (linhas.length - 1) * (tamanho + 1) / 2 : 0)}" text-anchor="${ancora}" font-size="${tamanho}" font-weight="${peso}" fill="${cor}">${linhas.map((linha, i) =>
+    `<tspan x="${x}" dy="${i ? tamanho + 1 : 0}">${esc(linha)}</tspan>`).join('')}</text>`;
+}
 function escalaY(vals, log, max0) {
   if (log) {
     const pos = vals.filter(v => v > 0); const lo = Math.floor(Math.log10(Math.min(...pos))), hi = Math.ceil(Math.log10(Math.max(...pos)));
@@ -402,15 +476,18 @@ function caminhoSuave(p) {
   }
   return d;
 }
-function gLinha(e, c, log) {
-  const W = 560, H = 270, L = 54, R = 24, T = 22, B = 36, w = W - L - R, h = H - T - B;
+function gLinha(e, c, log, medidas) {
+  const W = medidas?.largura || 560, H = medidas ? Math.max(W >= 600 ? 142 : 210, medidas.altura) : 270;
+  const L = 54, R = medidas ? 36 : 24, T = 22, B = medidas ? 52 : 36, w = W - L - R, h = H - T - B;
   const todos = e.series.flatMap(s => s.values); const s = escalaY(todos, log, e.maximum && !log ? e.maximum : 0);
   const xs = e.xValues && e.xValues.length === e.labels.length ? e.xValues : e.labels.map((_, i) => i);
   const x0 = Math.min(...xs), x1 = Math.max(...xs); const X = v => L + w * (x1 === x0 ? .5 : (v - x0) / (x1 - x0));
   const cores = coresSerie(c, e.series.length); const id = 'gr' + e.id;
   let g = `${legenda(e.series.map(q => q.name), cores)}<svg class="g" viewBox="0 0 ${W} ${H}">`;
   s.ticks.forEach(t => { const y = yPos(t, s, T, h); g += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${L - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${rotTick(t, s)}</text>`; });
-  e.labels.forEach((l, i) => g += `<text x="${X(xs[i])}" y="${H - 12}" text-anchor="middle" font-size="12" fill="var(--muted)">${esc(l)}</text>`);
+  e.labels.forEach((l, i) => g += medidas
+    ? textoGrafico(l, X(xs[i]), H - B + 17, { largura: w / Math.max(1, xs.length - 1) - 5 })
+    : `<text x="${X(xs[i])}" y="${H - 12}" text-anchor="middle" font-size="12" fill="var(--muted)">${esc(l)}</text>`);
   e.series.forEach((q, k) => {
     const pts = q.values.map((v, i) => [X(xs[i]), yPos(v, s, T, h)]);
     g += `<defs><linearGradient id="${id}${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${cores[k]}" stop-opacity="${e.series.length > 1 ? .18 : .35}"/><stop offset="1" stop-color="${cores[k]}" stop-opacity="0"/></linearGradient></defs>`;
@@ -423,117 +500,163 @@ function gLinha(e, c, log) {
   });
   return g + '</svg><p class="nota-curva">Curva suavizada só para leitura; os pontos são as medidas (toque para ver o valor).</p>';
 }
-function gColunas(e, c) {
-  const W = 560, H = 260, L = 46, R = 12, T = 26, B = 40, w = W - L - R, h = H - T - B;
+function gColunas(e, c, medidas) {
+  const W = medidas?.largura || 560, L = 46, R = 12, T = 26, w = W - L - R;
+  const gw = w / e.labels.length;
+  const B = medidas ? 25 + 13 * Math.max(...e.labels.map(l => quebrarRotulo(l, gw - 6).length)) : 40;
+  const H = medidas ? Math.max(W >= 600 ? B + 88 : 210, medidas.altura) : 260, h = H - T - B;
   const s = escalaY(e.series.flatMap(q => q.values), false, e.maximum || 0); const cores = coresSerie(c, e.series.length);
   cores[0] = e.series.length > 1 ? '#64748b' : c; if (e.series.length > 1) cores[1] = c;
-  const gw = w / e.labels.length, bw = Math.min(54, (gw - 26) / e.series.length);
+  const espaco = medidas ? Math.min(6, gw * .09) : 6;
+  const bw = medidas ? Math.min(76, (gw * .88 - espaco * (e.series.length - 1)) / e.series.length) : Math.min(54, (gw - 26) / e.series.length);
   let g = `${legenda(e.series.map(q => q.name), cores)}<svg class="g" viewBox="0 0 ${W} ${H}">`;
   s.ticks.forEach(t => { const y = yPos(t, s, T, h); g += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${L - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${num(t)}</text>`; });
   e.labels.forEach((l, i) => {
-    const gx = L + i * gw + gw / 2 - (bw * e.series.length + 6 * (e.series.length - 1)) / 2;
+    const gx = L + i * gw + gw / 2 - (bw * e.series.length + espaco * (e.series.length - 1)) / 2;
     e.series.forEach((q, k) => {
-      const v = q.values[i], y = yPos(v, s, T, h), x = gx + k * (bw + 6);
+      const v = q.values[i], y = yPos(v, s, T, h), x = gx + k * (bw + espaco);
       g += `<rect x="${x}" y="${y}" width="${bw}" height="${Math.max(T + h - y, 2)}" rx="7" fill="${cores[k]}" opacity="${k === 0 && e.series.length > 1 ? .55 : .95}" data-tip="${dicaValor(e, l, q.name, v, k > 0 ? e.series[0].values[i] : 0)}"/>`;
     });
-    g += `<text x="${L + i * gw + gw / 2}" y="${H - 14}" text-anchor="middle" font-size="12.5" fill="var(--muted)">${esc(l)}</text>`;
+    g += medidas
+      ? textoGrafico(l, L + i * gw + gw / 2, H - B + 18, { largura: gw - 6 })
+      : `<text x="${L + i * gw + gw / 2}" y="${H - 14}" text-anchor="middle" font-size="12.5" fill="var(--muted)">${esc(l)}</text>`;
   });
   return g + '</svg>';
 }
-function gBarras(e, c) {
+function gBarras(e, c, medidas) {
   const vals = e.series[0].values, labels = e.labels;
   const iref = e.refIdx !== undefined ? e.refIdx : labels.findIndex(l => /controle|sem fungicida|sem aditivo|meio sem|sem uv|0% n|sem alum/i.test(l));
   const ref = iref >= 0 ? vals[iref] : null;
-  const W = 560, L = 190, R = 70, alt = labels.length > 6 ? 24 : 34, T = 14, H = T + labels.length * alt + 26;
+  const W = medidas?.largura || 560, L = medidas ? Math.min(310, Math.round(W * .36)) : 190, R = 70, T = 14;
+  const minimo = medidas ? Math.max(33, ...labels.map(l => quebrarRotulo(l, L - 12).length * 13 + 8)) : 0;
+  const alt = medidas ? alturaLinha(medidas, labels.length, minimo, T + 26, 130) : labels.length > 6 ? 24 : 34;
+  const H = T + labels.length * alt + 26;
   const mx = Math.max(...vals, e.maximum && e.maximum < Math.max(...vals) * 3 ? e.maximum : 0) || 1;
   const X = v => L + (W - L - R) * v / mx;
   let g = `<svg class="g" viewBox="0 0 ${W} ${H}">`;
   if (ref !== null) g += `<line x1="${X(ref)}" x2="${X(ref)}" y1="${T - 6}" y2="${H - 20}" stroke="var(--muted)" stroke-dasharray="5 4"/><text x="${X(ref)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="var(--muted)">referência</text>`;
   labels.forEach((l, i) => {
-    const v = vals[i], y = T + i * alt, bh = alt - (alt > 30 ? 12 : 8), cor = i === iref ? '#64748b' : c;
+    const v = vals[i], bh = medidas ? Math.min(40, alt - 8) : alt - (alt > 30 ? 12 : 8), cor = i === iref ? '#64748b' : c;
+    const y = T + i * alt + (medidas ? (alt - bh) / 2 : 0);
     const queda = ref && i !== iref ? v / ref : null;
-    g += `<text x="${L - 10}" y="${y + bh / 2 + 4}" text-anchor="end" font-size="${alt > 30 ? 12.5 : 11.5}" fill="var(--text)">${esc(l)}</text>
+    g += (medidas ? textoGrafico(l, L - 10, y + bh / 2 + 4, { ancora: 'end', largura: L - 12, cor: 'var(--text)', centrar: true })
+      : `<text x="${L - 10}" y="${y + bh / 2 + 4}" text-anchor="end" font-size="${alt > 30 ? 12.5 : 11.5}" fill="var(--text)">${esc(l)}</text>`) + `
       <rect x="${L}" y="${y}" width="${W - L - R}" height="${bh}" rx="${bh / 2}" fill="${hexA('#94a3b8', .08)}"/>
       <rect x="${L}" y="${y}" width="${Math.max(X(v) - L, 6)}" height="${bh}" rx="${bh / 2}" fill="${cor}" opacity="${queda !== null && queda < .5 ? 1 : .8}" data-tip="${dicaValor(e, l, '', v, i !== iref ? ref : 0)}"/>
       ${v === 0 ? `<text x="${L + 6}" y="${y + bh / 2 + 4}" font-size="11.5" font-weight="700" fill="#f87171">zero</text>` : `<text x="${X(v) + 7}" y="${y + bh / 2 + 4}" font-size="12.5" font-weight="700" fill="var(--strong)">${num(v)}</text>`}`;
   });
   return g + '</svg>';
 }
-function gInclinacao(e, c, transpor, log) {
+function gInclinacao(e, c, transpor, log, medidas) {
   let xsN, linhas;
   if (transpor) { xsN = e.series.map(s => s.name); linhas = e.labels.map((l, i) => ({ name: l, values: e.series.map(s => s.values[i]) })); }
   else { xsN = e.labels; linhas = e.series.map(s => ({ name: s.name, values: s.values })); }
-  const W = 560, H = 270, L = 150, R = 150, T = 30, B = 34, w = W - L - R, h = H - T - B;
+  const W = medidas?.largura || 560, H = medidas ? Math.max(245, medidas.altura) : 270;
+  const L = medidas ? Math.min(230, W * .31) : 150, R = medidas ? Math.min(160, W * .25) : 150;
+  const T = 30, B = medidas ? 56 : 34, w = W - L - R, h = H - T - B;
   const s = escalaY(linhas.flatMap(q => q.values), log, 0);
   const X = i => L + w * (xsN.length === 1 ? .5 : i / (xsN.length - 1));
   const cores = linhas.map((q, k) => /controle/i.test(q.name) ? '#64748b' : [c, segundaCor(c), terceiraCor][k % 3]);
   let g = `<svg class="g" viewBox="0 0 ${W} ${H}">`;
-  xsN.forEach((n, i) => g += `<line x1="${X(i)}" x2="${X(i)}" y1="${T - 8}" y2="${T + h}" stroke="var(--grid)" stroke-width="2"/><text x="${X(i)}" y="${H - 10}" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--muted)">${esc(n)}</text>`);
+  xsN.forEach((n, i) => {
+    g += `<line x1="${X(i)}" x2="${X(i)}" y1="${T - 8}" y2="${T + h}" stroke="var(--grid)" stroke-width="2"/>`;
+    g += medidas ? textoGrafico(n, X(i), H - B + 20, { tamanho:12.5, peso:700, largura:w / Math.max(1, xsN.length - 1) - 4 })
+      : `<text x="${X(i)}" y="${H - 10}" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--muted)">${esc(n)}</text>`;
+  });
   const rotulos = [];
   linhas.forEach((q, k) => {
     const pts = q.values.map((v, i) => [X(i), yPos(v, s, T, h)]);
     g += `<path d="M${pts.map(p => p.join(',')).join(' L')}" fill="none" stroke="${cores[k]}" stroke-width="3.5" stroke-linecap="round"/>`;
-    pts.forEach((p, i) => g += `<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="${cores[k]}" stroke="var(--bg)" stroke-width="2"/>`);
+    pts.forEach((p, i) => {
+      g += `<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="${cores[k]}" stroke="var(--bg)" stroke-width="2"/>`;
+      if (medidas) g += `<circle cx="${p[0]}" cy="${p[1]}" r="15" fill="transparent" data-tip="${dicaValor(e, xsN[i], q.name, q.values[i], !log && i > 0 ? q.values[0] : 0)}"/>`;
+    });
     rotulos.push({ y: pts[0][1], x: pts[0][0] - 12, anc: 'end', txt: `${q.name}: ${log ? fmtGrande(q.values[0]) : num(q.values[0])}`, cor: cores[k] });
     const ult = pts.length - 1;
     rotulos.push({ y: pts[ult][1], x: pts[ult][0] + 12, anc: 'start', txt: `${log ? fmtGrande(q.values[ult]) : num(q.values[ult])}` + (q.values[0] > 0 && !log ? `  (${q.values[ult] >= q.values[0] ? '+' : '−'}${num(Math.abs(q.values[ult] / q.values[0] - 1) * 100, 0)}%)` : ''), cor: cores[k] });
   });
-  ['end', 'start'].forEach(anc => { const rs = rotulos.filter(r => r.anc === anc).sort((a, b) => a.y - b.y); for (let i = 1; i < rs.length; i++) if (rs[i].y - rs[i - 1].y < 16) rs[i].y = rs[i - 1].y + 16; });
-  rotulos.forEach(r => g += `<text x="${r.x}" y="${r.y + 4}" text-anchor="${r.anc}" font-size="12" font-weight="700" fill="${r.cor}">${esc(r.txt)}</text>`);
+  ['end', 'start'].forEach(anc => {
+    const rs = rotulos.filter(r => r.anc === anc).sort((a, b) => a.y - b.y);
+    let proximo = medidas ? 10 : -Infinity;
+    rs.forEach(r => {
+      r.largura = medidas ? (anc === 'end' ? L : R) - 16 : Infinity;
+      r.y = Math.max(r.y, proximo);
+      proximo = r.y + Math.max(16, quebrarRotulo(r.txt, r.largura).length * 13 + 3);
+    });
+    if (medidas && proximo > T + h + 8) {
+      const ajuste = proximo - T - h - 8;
+      rs.forEach(r => { r.y -= ajuste; });
+    }
+  });
+  rotulos.forEach(r => g += medidas ? textoGrafico(r.txt, r.x, r.y + 4, { ancora:r.anc, peso:700, largura:r.largura, cor:r.cor })
+    : `<text x="${r.x}" y="${r.y + 4}" text-anchor="${r.anc}" font-size="12" font-weight="700" fill="${r.cor}">${esc(r.txt)}</text>`);
   return g + '</svg>';
 }
 const fmtGrande = v => v >= 1e6 ? num(v / 1e6, 1) + ' mi' : v >= 1e3 ? num(v / 1e3, 0) + ' mil' : num(v);
-function gAntesDepois(e, c) {
+function gAntesDepois(e, c, medidas) {
   const v = e.series[0].values, l = e.labels, log = /log/i.test(e.unit || '');
-  const W = 560, H = 250, base = 210, topo = 78, mx = Math.max(...v);
-  const Y = x => base - (base - topo) * x / mx, bw = 120, xa = 120, xb = 330;
+  const W = medidas?.largura || 560, H = medidas ? Math.max(230, medidas.altura) : 250;
+  const base = H - (medidas ? 52 : 40), topo = 78, mx = Math.max(...v);
+  const Y = x => base - (base - topo) * x / mx;
+  const bw = medidas ? Math.min(W * .23, 230) : 120, xa = medidas ? W * .29 - bw / 2 : 120, xb = medidas ? W * .71 - bw / 2 : 330;
+  const dicaBarra = i => medidas ? `data-tip="${dicaValor(e, l[i], '', v[i], i && !log ? v[0] : 0)}"` : '';
   const dif = log ? `${v[1] >= v[0] ? '+' : '−'}${num(Math.abs(v[1] - v[0]), 1)} log` : `${v[1] >= v[0] ? '+' : '−'}${num(Math.abs(v[1] / v[0] - 1) * 100, 0)}%`;
   const corB = v[1] < v[0] ? '#f87171' : '#4ade80';
   return `<svg class="g" viewBox="0 0 ${W} ${H}">
     <line x1="60" x2="${W - 30}" y1="${base}" y2="${base}" stroke="var(--grid)" stroke-width="2"/>
-    <rect x="${xa}" y="${Y(v[0])}" width="${bw}" height="${base - Y(v[0])}" rx="10" fill="#64748b" opacity=".6"/>
-    <rect x="${xb}" y="${Y(v[1])}" width="${bw}" height="${base - Y(v[1])}" rx="10" fill="${c}"/>
+    <rect x="${xa}" y="${Y(v[0])}" width="${bw}" height="${base - Y(v[0])}" rx="10" fill="#64748b" opacity=".6" ${dicaBarra(0)}/>
+    <rect x="${xb}" y="${Y(v[1])}" width="${bw}" height="${base - Y(v[1])}" rx="10" fill="${c}" ${dicaBarra(1)}/>
     <text x="${xa + bw / 2}" y="${Y(v[0]) - 10}" text-anchor="middle" font-size="20" font-weight="700" fill="var(--strong)" font-family="Space Grotesk, Inter">${num(v[0])}</text>
     <text x="${xb + bw / 2}" y="${Y(v[1]) - 10}" text-anchor="middle" font-size="20" font-weight="700" fill="var(--strong)" font-family="Space Grotesk, Inter">${num(v[1])}</text>
-    <text x="${xa + bw / 2}" y="${base + 22}" text-anchor="middle" font-size="12.5" fill="var(--muted)">${esc(l[0])}</text>
-    <text x="${xb + bw / 2}" y="${base + 22}" text-anchor="middle" font-size="12.5" fill="var(--muted)">${esc(l[1])}</text>
+    ${l.slice(0, 2).map((nome, i) => medidas ? textoGrafico(nome, (i ? xb : xa) + bw / 2, base + 22, { largura:W * .38, tamanho:12.5 })
+      : `<text x="${(i ? xb : xa) + bw / 2}" y="${base + 22}" text-anchor="middle" font-size="12.5" fill="var(--muted)">${esc(nome)}</text>`).join('')}
     <path d="M${xa + bw + 12},${Y(v[0]) + 14} C${xa + bw + 60},${Y(v[0]) + 4} ${xb - 60},${Y(v[1]) - 4} ${xb - 12},${Y(v[1]) + 6}" fill="none" stroke="${corB}" stroke-width="2.5" marker-end="url(#seta${e.id})"/>
     <defs><marker id="seta${e.id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="${corB}"/></marker></defs>
     <rect x="${(xa + bw + xb) / 2 - 48}" y="8" width="96" height="32" rx="16" fill="${hexA(corB, .15)}" stroke="${corB}"/>
     <text x="${(xa + bw + xb) / 2}" y="29" text-anchor="middle" font-size="15" font-weight="800" fill="${corB}">${dif}</text>
   </svg>`;
 }
-function gDuracao(e, c) {
-  const v = e.series[0].values, l = e.labels, W = 560, L = 90, R = 80, mx = Math.max(...v), X = d => L + (W - L - R) * d / mx, H = 210;
+function gDuracao(e, c, medidas) {
+  const v = e.series[0].values, l = e.labels, W = medidas?.largura || 560, L = 90, R = 80, mx = Math.max(...v);
+  const X = d => L + (W - L - R) * d / mx, H = medidas ? Math.max(220, medidas.altura) : 210;
+  const eixo = medidas ? H - 68 : 150;
   let g = `<svg class="g" viewBox="0 0 ${W} ${H}">`;
   const passo = mx > 30 ? 10 : 5;
-  for (let d = 0; d <= mx; d += passo) g += `<line x1="${X(d)}" x2="${X(d)}" y1="18" y2="150" stroke="var(--grid)"/><text x="${X(d)}" y="168" text-anchor="middle" font-size="11" fill="var(--muted)">${d}</text>`;
-  g += `<text x="${(L + W - R) / 2}" y="190" text-anchor="middle" font-size="11.5" fill="var(--muted)">dias até a bactéria não ser mais recuperada do solo</text>`;
+  for (let d = 0; d <= mx; d += passo) g += `<line x1="${X(d)}" x2="${X(d)}" y1="18" y2="${eixo}" stroke="var(--grid)"/><text x="${X(d)}" y="${eixo + 18}" text-anchor="middle" font-size="11" fill="var(--muted)">${d}</text>`;
+  const unidade = 'dias até a bactéria não ser mais recuperada do solo';
+  g += medidas ? textoGrafico(unidade, W / 2, eixo + 38, { largura:W - 24 })
+    : `<text x="${(L + W - R) / 2}" y="190" text-anchor="middle" font-size="11.5" fill="var(--muted)">${unidade}</text>`;
   v.forEach((d, i) => {
-    const y = 34 + i * 62, cor = i === 0 ? c : '#f87171';
+    const y = medidas ? 34 + i * (eixo - 54) / Math.max(1, v.length - 1) : 34 + i * 62, cor = i === 0 ? c : '#f87171';
     g += `<text x="${L - 12}" y="${y + 20}" text-anchor="end" font-size="16" font-weight="700" fill="var(--strong)">${esc(l[i])}</text>
-      <rect x="${L}" y="${y}" width="${Math.max(X(d) - L, 10)}" height="30" rx="15" fill="${cor}" opacity=".9"/>
+      <rect x="${L}" y="${y}" width="${Math.max(X(d) - L, 10)}" height="30" rx="15" fill="${cor}" opacity=".9" ${medidas ? `data-tip="${dicaValor(e, l[i], '', d, 0)}"` : ''}/>
       <text x="${Math.max(X(d), L + 10) + 10}" y="${y + 21}" font-size="15" font-weight="800" fill="${cor}">${num(d)} ${d === 1 ? 'dia' : 'dias'}</text>`;
   });
   if (v[0] && v[1]) g += `<text x="${W - R}" y="14" text-anchor="end" font-size="12.5" font-weight="700" fill="#f87171">${num(v[0] / v[1], 0)} vezes mais rápido no calor</text>`;
   return g + '</svg>';
 }
-function gWaffle(e, c) {
+function gWaffle(e, c, medidas) {
   const v = e.series[0].values, l = e.labels, resto = Math.round(v[1] / (v[0] || 100) * 100);
-  const W = 560, H = 236, tam = 17, gap = 4, x0 = 28, y0 = 18;
+  const W = medidas?.largura || 560, H = medidas ? Math.max(208, medidas.altura) : 236;
+  const tam = medidas ? Math.min(44, Math.floor(W * .044), Math.floor(H * .07)) : 17, gap = medidas ? Math.round(tam * .22) : 4;
+  const lado = 10 * tam + 9 * gap, x0 = medidas ? Math.round(W * .045) : 28, y0 = medidas ? Math.round((H - lado) / 2) : 18;
+  const tx = medidas ? x0 + lado + Math.round(W * .055) : 270, ty = medidas ? Math.max(70, H / 2 - 44) : 74;
   let g = `<svg class="g" viewBox="0 0 ${W} ${H}">`;
   for (let i = 0; i < 100; i++) {
     const col = i % 10, lin = Math.floor(i / 10), viva = i < resto;
     g += `<circle cx="${x0 + col * (tam + gap) + tam / 2}" cy="${y0 + lin * (tam + gap) + tam / 2}" r="${tam / 2}" fill="${viva ? c : 'none'}" stroke="${viva ? c : 'var(--faint)'}" stroke-width="1.5"/>`;
   }
-  g += `<text x="270" y="74" font-size="54" font-weight="700" fill="${c}" font-family="Space Grotesk, Inter">${resto}</text>
-    <text x="270" y="102" font-size="15" fill="var(--strong)" font-weight="700">de cada 100</text>
-    <text x="270" y="124" font-size="13" fill="var(--muted)">${esc(l[1])}</text>
-    <text x="270" y="160" font-size="12" fill="var(--muted)">Cada bolinha = 1% de ${esc(l[0].toLowerCase())}.</text>`;
+  if (medidas) g += `<rect x="${x0}" y="${y0}" width="${lado}" height="${lado}" fill="transparent" data-tip="${dicaValor(e, l[1], '', v[1], v[0])}"/>`;
+  g += `<text x="${tx}" y="${ty}" font-size="54" font-weight="700" fill="${c}" font-family="Space Grotesk, Inter">${resto}</text>
+    <text x="${tx}" y="${ty + 28}" font-size="15" fill="var(--strong)" font-weight="700">de cada 100</text>`;
+  const nota = `Cada bolinha = 1% de ${l[0].toLowerCase()}.`;
+  g += medidas ? textoGrafico(l[1], tx, ty + 50, { tamanho:13, ancora:'start', largura:W - tx - 8 }) +
+    textoGrafico(nota, tx, ty + 86, { ancora:'start', largura:W - tx - 8 })
+    : `<text x="270" y="124" font-size="13" fill="var(--muted)">${esc(l[1])}</text><text x="270" y="160" font-size="12" fill="var(--muted)">${esc(nota)}</text>`;
   return g + '</svg>';
 }
 function gQual(e, c) {
-  return `<div style="margin:8px 0">${(e.qualRows || []).map(([a, b]) => `<div style="display:flex;justify-content:space-between;gap:14px;padding:11px 12px;border-radius:12px;background:var(--chip);margin:6px 0;border:1px solid var(--chip-b)">
+  return `<div style="margin:8px 0">${(e.qualRows || []).map(([a, b]) => `<div class="grafico-qual-linha" style="display:flex;justify-content:space-between;gap:14px;padding:11px 12px;border-radius:12px;background:var(--chip);margin:6px 0;border:1px solid var(--chip-b)">
     <span style="font-size:13.5px">${esc(a)}</span><b style="font-size:13px;color:${/sem halo|não houve/i.test(b) ? '#4ade80' : 'var(--muted)'}"><i class="fas ${/sem halo|não houve/i.test(b) ? 'fa-circle-check' : 'fa-circle-dot'}"></i> ${esc(b)}</b></div>`).join('')}</div>`;
 }
 
@@ -549,28 +672,95 @@ try { if (parent !== window && parent.document.documentElement.classList.contain
 const dica = document.createElement('div'); dica.className = 'dica'; dica.hidden = true; document.body.appendChild(dica);
 let dicaAlvo = null;
 function fecharDica() { if (!dica.hidden) dica.hidden = true; if (dicaAlvo) dicaAlvo.classList.remove('dica-on'); dicaAlvo = null; }
-function mostrarDica(el) {
+function leiturasDoPonto(el, r, expandido) {
+  if (!expandido || !el.matches('circle')) return [el];
+  // Séries muito próximas podem compartilhar o mesmo alvo de toque.
+  return Array.from(el.ownerSVGElement.querySelectorAll('circle[data-tip]')).filter(ponto => {
+    const p = ponto.getBoundingClientRect();
+    return Math.abs(p.left + p.width / 2 - r.left - r.width / 2) < 2 &&
+      Math.abs(p.top + p.height / 2 - r.top - r.height / 2) < 14;
+  });
+}
+function mostrarDica(el, evento) {
   if (dicaAlvo === el && !dica.hidden) return;
   fecharDica(); dicaAlvo = el; el.classList.add('dica-on');
-  dica.innerHTML = `<button class="dica-x" aria-label="Fechar"><i class="fas fa-xmark"></i></button>` + el.getAttribute('data-tip');
+  const modalGrafico = expansaoGraficos.modal;
+  const r = el.getBoundingClientRect();
+  dica.innerHTML = `<button class="dica-x" aria-label="Fechar"><i class="fas fa-xmark"></i></button>` +
+    leiturasDoPonto(el, r, modalGrafico).map(ponto => `<div class="dica-leitura">${ponto.getAttribute('data-tip')}</div>`).join('');
+  const camada = modalGrafico || document.body;
+  if (dica.parentElement !== camada) camada.appendChild(dica);
   dica.hidden = false;
-  const r = el.getBoundingClientRect(), dw = dica.offsetWidth, dh = dica.offsetHeight;
-  let x = r.left + r.width / 2 - dw / 2 + scrollX, y = r.top + scrollY - dh - 10;
-  if (r.top - dh - 10 < 4) y = r.bottom + scrollY + 10;
-  x = Math.max(8 + scrollX, Math.min(x, scrollX + innerWidth - dw - 8));
+  const dw = dica.offsetWidth, dh = dica.offsetHeight;
+  const sx = modalGrafico ? 0 : scrollX, sy = modalGrafico ? 0 : scrollY;
+  const usarPonteiro = modalGrafico && evento && !el.matches('circle') && (r.width > 90 || r.height > 68);
+  const ancoraX = usarPonteiro ? evento.clientX : r.left + r.width / 2;
+  const ancoraTopo = usarPonteiro ? evento.clientY : r.top;
+  const ancoraBase = usarPonteiro ? evento.clientY : r.bottom;
+  let x = ancoraX - dw / 2 + sx, y = ancoraTopo + sy - dh - 10;
+  if (ancoraTopo - dh - 10 < 4) y = ancoraBase + sy + 10;
+  x = Math.max(8 + sx, Math.min(x, sx + innerWidth - dw - 8));
+  if (modalGrafico) {
+    const limite = modalGrafico.getBoundingClientRect();
+    const desenho = el.ownerSVGElement?.getBoundingClientRect();
+    if (desenho && y < desenho.top && ancoraBase + 10 + dh < limite.bottom - 8) y = ancoraBase + 10;
+    x = Math.max(limite.left + 8, Math.min(x, limite.right - dw - 8));
+    y = Math.max(limite.top + 8, Math.min(y, limite.bottom - dh - 8));
+  }
   dica.style.left = x + 'px'; dica.style.top = y + 'px';
   dica.querySelector('.dica-x').onclick = ev => { ev.stopPropagation(); fecharDica(); };
 }
 dica.addEventListener('click', ev => ev.stopPropagation());
-app.addEventListener('click', ev => { const el = ev.target.closest('[data-tip]'); if (el) { ev.stopPropagation(); mostrarDica(el); } });
-app.addEventListener('pointerover', ev => { if (ev.pointerType !== 'mouse') return; const el = ev.target.closest('[data-tip]'); if (el) mostrarDica(el); });
+function interacoesGrafico(camada) {
+  camada.addEventListener('click', ev => {
+    const el = ev.target.closest('[data-tip]');
+    if (el) { ev.stopPropagation(); mostrarDica(el, ev); }
+    else abrirCartaoDaLinha(ev);
+  });
+  camada.addEventListener('pointerover', ev => {
+    if (ev.pointerType !== 'mouse') return;
+    const el = ev.target.closest('[data-tip]');
+    if (el) mostrarDica(el, ev);
+  });
+}
+
+const expansaoGraficos = criarExpansaoGraficos({
+  renderizar(grafico, medidas) {
+    if (grafico.dataset.graficoExpansivel === 'medida') {
+      const { med, a } = ctxFator;
+      return painelMedida(med, a.filter(e => e.medida === med), medidas);
+    }
+    if (grafico.dataset.graficoExpansivel === 'protecao') return graficoProtecao(ctxFator.a, medidas);
+    const e = F.exps.find(exp => exp.id === grafico.dataset.experimento);
+    return desenhar(e, corGrupo[e.grupoM], medidas);
+  },
+  limparDica: fecharDica,
+  aoRestaurar() {
+    document.body.appendChild(dica);
+    ajustarPainelMedida();
+    if (parent !== window) enviarAltura();
+  }
+});
+interacoesGrafico(app);
+const corpoGraficoExpandido = document.querySelector('.grafico-modal-corpo');
+interacoesGrafico(corpoGraficoExpandido);
+corpoGraficoExpandido.addEventListener('keydown', ev => {
+  const alvo = ev.target.closest('[data-tip]');
+  if (!alvo || !['Enter', ' '].includes(ev.key)) return;
+  ev.preventDefault();
+  mostrarDica(alvo);
+});
 
 visaoGeral();
 
 
 // ---------- altura automática dentro do index (iframe) ----------
+function enviarAltura() {
+  if (expansaoGraficos.ativa || !app.offsetHeight) return;
+  parent.postMessage({ rizoAltura: Math.ceil(app.getBoundingClientRect().height) }, '*');
+}
 if (parent !== window) {
   document.documentElement.classList.add('embutido');
-  const enviar = () => { try { parent.postMessage({ rizoAltura: Math.ceil(document.documentElement.scrollHeight) }, '*'); } catch (_) {} };
-  new ResizeObserver(enviar).observe(document.body); addEventListener('load', enviar);
+  new ResizeObserver(enviarAltura).observe(app);
+  addEventListener('load', enviarAltura);
 }
