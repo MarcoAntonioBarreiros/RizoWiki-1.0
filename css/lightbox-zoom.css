@@ -1,0 +1,22 @@
+/* Ampliação das fotos em tela estreita (ver js/lightbox-zoom.js) */
+.lb-pista { display: flex; justify-content: center; max-width: 100%; }
+#lightbox.lb-zoom { padding-inline: 0; }
+#lightbox.lb-zoom #lightbox-img { box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+.lb-pista.lb-rola {
+  justify-content: flex-start; width: 100vw; max-width: none; overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x; padding-inline: 8px;
+}
+.lb-pista.lb-rola::-webkit-scrollbar { display: none; }
+.lb-pista.lb-rola #lightbox-img { flex: none; }
+#lightbox.lb-zoom #lightbox-caption { margin-inline: 12px; font-size: 1rem; border-radius: 16px; padding: .6rem 1rem; }
+/* ao fechar, o fundo some junto com a foto voltando ao cartão */
+#lightbox.lb-fechando { transition: opacity .32s ease; }
+.lb-dica {
+  position: absolute; left: 50%; top: max(18px, env(safe-area-inset-top)); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px;
+  color: #fff; background: rgba(15,23,42,.78); border: 1px solid rgba(255,255,255,.18);
+  font-weight: 700; font-size: .85rem; pointer-events: none; opacity: 0; transition: opacity .35s;
+}
+.lb-dica.lb-dica-on { opacity: 1; animation: lbDica 3.2s ease forwards; }
+@keyframes lbDica { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .lb-dica.lb-dica-on { animation: none; } }

@@ -188,9 +188,9 @@ window.bioData = {
     ],
     "evidencia": "consolidada",
     "imagensV2": {
-      "colonia": null,
-      "efeito1": null,
-      "efeito2": null
+      "colonia": "assets/v2/bacillus_colonia.webp",
+      "efeito1": "assets/v2/bacillus_efeito1.webp",
+      "efeito2": "assets/v2/bacillus_efeito2.webp"
     }
   },
   "fixadores": {
@@ -343,8 +343,8 @@ window.bioData = {
     ],
     "evidencia": "consolidada",
     "imagensV2": {
-      "colonia": null,
-      "efeito1": null,
+      "colonia": "assets/v2/fixadores_colonia.webp",
+      "efeito1": "assets/v2/fixadores_efeito1.webp",
       "efeito2": null
     }
   },
@@ -508,9 +508,9 @@ window.bioData = {
     ],
     "evidencia": "consolidada",
     "imagensV2": {
-      "colonia": null,
-      "efeito1": null,
-      "efeito2": null
+      "colonia": "assets/v2/rhizobium_colonia.webp",
+      "efeito1": "assets/v2/rhizobium_efeito1.webp",
+      "efeito2": "assets/v2/rhizobium_efeito2.webp"
     }
   },
   "methylobacterium": {
@@ -522,11 +522,11 @@ window.bioData = {
     "effectImages": [
       {
         "url": "assets/efeito Methylobacterium.webp",
-        "cap": "Folha de planta tratada mais verde sob estresse."
+        "cap": "Pulverização nas folhas: é assim que o Methylobacterium é aplicado."
       },
       {
         "url": "assets/efeito Methylobacterium2.webp",
-        "cap": "Planta tratada com maior área foliar."
+        "cap": "Folha encostada no meio de cultura: as colônias rosadas mostram as bactérias que vivem na superfície da folha."
       }
     ],
     "strains": [
@@ -679,9 +679,9 @@ window.bioData = {
     "notaFuncoes": "Fornece N: só a espécie <em>M. symbioticum</em> (aplicação foliar), com resultados variáveis entre ensaios.",
     "evidencia": "inicial",
     "imagensV2": {
-      "colonia": null,
-      "efeito1": null,
-      "efeito2": null
+      "colonia": "assets/v2/methylobacterium_colonia.webp",
+      "efeito1": "assets/v2/methylobacterium_efeito1.webp",
+      "efeito2": "assets/v2/methylobacterium_efeito2.webp"
     }
   },
   "bioinseticidas": {
@@ -697,7 +697,7 @@ window.bioData = {
       },
       {
         "url": "assets/efeito Bauveria2.webp",
-        "cap": "Folha protegida ao lado de folha atacada pela praga."
+        "cap": "Milho atacado pela lagarta-do-cartucho (à esquerda) ao lado de milho protegido (à direita)."
       }
     ],
     "strains": [
@@ -902,8 +902,8 @@ window.bioData = {
     "evidencia": "em_revisao",
     "imagensV2": {
       "colonia": null,
-      "efeito1": null,
-      "efeito2": null
+      "efeito1": "assets/v2/bioinseticidas_efeito1.webp",
+      "efeito2": "assets/v2/bioinseticidas_efeito2.webp"
     }
   },
   "pseudomonas": {
@@ -915,7 +915,7 @@ window.bioData = {
     "effectImages": [
       {
         "url": "assets/efeito Pseudomonas.webp",
-        "cap": "Raiz em corte transversal com Pseudomonas colonizando a superfície."
+        "cap": "Na placa, a risca de bactéria (à direita) segura o avanço do fungo causador de doença (à esquerda)."
       },
       {
         "url": "assets/efeito Pseudomonas2.webp",
@@ -1074,8 +1074,8 @@ window.bioData = {
     ],
     "evidencia": "em_revisao",
     "imagensV2": {
-      "colonia": null,
-      "efeito1": null,
+      "colonia": "assets/v2/pseudomonas_colonia.webp",
+      "efeito1": "assets/v2/pseudomonas_efeito1.webp",
       "efeito2": null
     }
   },
@@ -1092,7 +1092,7 @@ window.bioData = {
       },
       {
         "url": "assets/efeito Trichoderma2.webp",
-        "cap": "Raiz sem lesões em solo com patógeno."
+        "cap": "Na placa, o Trichoderma (verde) cresce por cima do fungo causador de doença (branco)."
       }
     ],
     "strains": [
@@ -1243,9 +1243,9 @@ window.bioData = {
     ],
     "evidencia": "em_revisao",
     "imagensV2": {
-      "colonia": null,
-      "efeito1": null,
-      "efeito2": null
+      "colonia": "assets/v2/trichoderma_colonia.webp",
+      "efeito1": "assets/v2/trichoderma_efeito1.webp",
+      "efeito2": "assets/v2/trichoderma_efeito2.webp"
     }
   },
   "micorrizas": {
@@ -1257,7 +1257,7 @@ window.bioData = {
     "effectImages": [
       {
         "url": "assets/efeito micorriza.webp",
-        "cap": "Hifas do fungo se estendem da raiz para o solo."
+        "cap": "Planta com micorriza (à direita), maior e mais verde que a planta sem micorriza (à esquerda)."
       },
       {
         "url": "assets/efeito micorriza2.webp",
@@ -1412,9 +1412,9 @@ window.bioData = {
     ],
     "evidencia": "em_revisao",
     "imagensV2": {
-      "colonia": null,
-      "efeito1": null,
-      "efeito2": null
+      "colonia": "assets/v2/micorrizas_colonia.webp",
+      "efeito1": "assets/v2/micorrizas_efeito1.webp",
+      "efeito2": "assets/v2/micorrizas_efeito2.webp"
     }
   },
   "pnsb": {
@@ -1426,11 +1426,11 @@ window.bioData = {
     "effectImages": [
       {
         "url": "assets/efeito Rhodopseudomonas.webp",
-        "cap": "Biofilme avermelhado de bactérias fotossintéticas."
+        "cap": "Culturas crescendo sob luz: a cor avermelhada vem dos pigmentos que essas bactérias usam na fotossíntese."
       },
       {
         "url": "assets/efeito Rhodopseudomonas2.webp",
-        "cap": "Agregados de solo com atividade microbiana."
+        "cap": "Arroz irrigado: ambiente alagado e com pouco oxigênio, onde essas bactérias vivem."
       }
     ],
     "strains": [
@@ -1571,9 +1571,9 @@ window.bioData = {
     "notaFuncoes": "Fixação de N relevante só em arroz irrigado (solo alagado e com luz). Em soja e milho de sequeiro, o efeito esperado é de bioestimulante.",
     "evidencia": "inicial",
     "imagensV2": {
-      "colonia": null,
-      "efeito1": null,
-      "efeito2": null
+      "colonia": "assets/v2/pnsb_colonia.webp",
+      "efeito1": "assets/v2/pnsb_efeito1.webp",
+      "efeito2": "assets/v2/pnsb_efeito2.webp"
     }
   }
 };
